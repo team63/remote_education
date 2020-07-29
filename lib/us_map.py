@@ -27,8 +27,8 @@ from app import app
 #Map Layout
 ##############################
 map=html.Div([
- #Place the main graph component here:
-    html.Iframe(src=app.get_asset_url('Tab.html') , width = 1000,  height = 1000),
+    #Place the main graph component here:
+    html.Iframe(src=app.get_asset_url('Tab.html'), width = 1000,  height = 650),
     # html.Img(src=app.get_asset_url('my-image.jpg'))
 ], className="ds4a-body")
     

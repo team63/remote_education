@@ -42,8 +42,6 @@ app.layout =html.Div(
     className="ds4a-app", #You can also add your own css files by locating them into the assets folder
 )
 
- 
-    
 ###############################################   
 #
 #           APP INTERACTIVITY:
@@ -85,19 +83,6 @@ app.layout =html.Div(
 
 #MAP click interaction
 
-
-
-
-
-    
-
-
-
-
-
-                                                 
-           
-        
 
 if __name__ == "__main__":
     app.run_server(debug=True)
