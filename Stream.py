@@ -11,7 +11,6 @@ from sklearn.ensemble import RandomForestRegressor
 import sklearn
 import matplotlib.pyplot as plt
 
-
 import streamlit as st
 import plotly.express as px
 
@@ -110,3 +109,76 @@ fig = px.box(
     # "ConexMilHab": "Connectivity"}
 )
 st.plotly_chart(fig)
+
+# Mapa 1
+# DirCol = pd.read_excel(
+#     "DirecionesCol.xlsx")
+# DirCol['Magnitude'] = 10
+
+# MapaCol = px.scatter_mapbox(
+#     DirCol,
+#     lat='LATITUD', lon='LONGITUD',
+#     # z = 'Magnitude',
+#     # radius = 10,
+#     center=dict(lat=3.76, lon=-76.52), zoom=5,
+#     # mapbox_style = "stamen-terrain"
+#     hover_name="COD_INST", hover_data=["NOM_INST"]
+#     )
+
+# MapaCol.update_layout(mapbox_style="open-street-map")
+# MapaCol.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
+
+# st.write(MapaCol)
+
+# Mapa 2
+import geopandas
+import branca
+from streamlit_folium import folium_static
+import folium
+
+
+file = "ShapeMap/MGN_MPIO_POLITICO.shp"
+MapaDpto = geopandas.read_file(file)
+MapaDpto['MPIO_CCDGO_C'] = pd.to_numeric(MapaDpto['DPTO_CCDGO'] + MapaDpto['MPIO_CCDGO'])
+
+MapaDpto = MapaDpto.join(Test.set_index('COLE_COD_MCPIO_UBICACION'), how = 'left', on = 'MPIO_CCDGO_C')
+MapaDpto.fillna(0, inplace = True)
+
+VariableGraph = 'Riesgo_total'
+
+min_cn, max_cn = MapaDpto[VariableGraph].quantile([0.01,0.99]).apply(round, 2)
+
+colormap = branca.colormap.LinearColormap(
+    colors=['white', 'plum', 'red', 'darkred'],
+    # colors=['white', 'darkred', 'red', 'orange', 'yellow', 'blue', 'darkgreen'],
+    # colors=['white','yellow','orange','red','darkred'],
+    index= [0, 1, 2, 3],
+    vmin = min_cn,
+    vmax = max_cn
+)
+
+m_crime = folium.Map(location=[4.570868, -74.2973328],
+                        zoom_start=5,
+                        tiles="OpenStreetMap")
+
+nombreestilo = lambda x: {
+    'fillColor': colormap(x['properties'][VariableGraph]),
+    'color': 'black',
+    'weight':0,
+    'fillOpacity':0.75
+}
+
+stategeo = folium.GeoJson(
+    MapaDpto.to_json(),
+    name = 'SABER PRO - Colombia',
+    style_function = nombreestilo,
+    tooltip = folium.GeoJsonTooltip(
+        fields = ['MPIO_CNMBR', VariableGraph],
+        aliases = ['Municipio', 'Puntaje'], 
+        localize = True
+    )
+).add_to(m_crime)
+
+colormap.add_to(m_crime)
+
+folium_static(m_crime)
