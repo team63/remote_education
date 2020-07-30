@@ -31,13 +31,61 @@ selection = st.sidebar.radio(
         'Descriptive statistics',
         'Model',
         'Estimation (map)',
-        'Simulation'
+        'Simulation',
+        'Hoja para pruebas'
     ]
     )
 
 # Crear base de datos
 Data_Base = pd.read_csv("Data_Base_1419.csv")
 Data_Base2 = Data_Base.copy()
+
+if selection == 'Hoja para pruebas':
+    DEPARTAMENTO_all = sorted(Data_Base.DEPARTAMENTO.unique().astype(str))
+    DEPARTAMENTO = st.sidebar.selectbox(
+        "Select DEPARTAMENTO",
+        ['All'] + DEPARTAMENTO_all
+    )
+
+    MUNICIPIO_all = sorted(Data_Base[Data_Base.DEPARTAMENTO == DEPARTAMENTO].MUNICIPIO.unique())
+    MUNICIPIO = st.sidebar.selectbox(
+        "Select MUNICIPIO",
+        ['All'] + MUNICIPIO_all
+    )
+
+
+    if MUNICIPIO == 'All':
+        pass
+        if DEPARTAMENTO == 'All':
+            st.write(Data_Base)
+            pass
+        else:
+            st.write(Data_Base[(Data_Base.DEPARTAMENTO == DEPARTAMENTO)])
+        pass
+    else:
+        st.write(Data_Base[(Data_Base.DEPARTAMENTO == DEPARTAMENTO)
+                        & (Data_Base.MUNICIPIO == MUNICIPIO)])
+        pass
+
+
+    # COLE_COD_MCPIO_UBICACION_all = Data_Base.COLE_COD_MCPIO_UBICACION.unique()
+    # COLE_COD_MCPIO_UBICACION = st.selectbox(
+    #     "Select COLE_COD_MCPIO_UBICACION",
+    #     COLE_COD_MCPIO_UBICACION_all
+    # )
+
+    # st.write(Data_Base[(Data_Base.COLE_COD_MCPIO_UBICACION == COLE_COD_MCPIO_UBICACION)])
+
+    # st.write(Data_Base.columns)
+
+    # selected = st.selectbox('Select one option:', [
+    #                         '', 'First one', 'Second one'], format_func=lambda x: 'Select an option' if x == '' else x)
+
+    # if selected:
+    #     st.success('Yay! 🎉')
+    # else:
+    #     st.warning('No option is selected')
+    pass
 
 CarSD = 1.5 
 # st.sidebar.slider(
@@ -61,7 +109,7 @@ for i in [2014, 2015, 2016, 2017, 2018, 2019]:
     Data_Base2['Riesgo'] = np.where(i == Data_Base2.Ano, np.where(Data_Base2['PUNT_GLOBAL'] < risk, 1, 0), Data_Base2.Riesgo)
 
 Data_Base1 = Data_Base2[Data_Base2.Ano < 2019]
-Data_Base1 = Data_Base1[~Data_Base1.isin([np.nan, np.inf, -np.inf]).any(1)]
+Data_Base1 = Data_Base1.fillna(0)
 
 # Modelo LOGIT
 Data_Base1['Intercepto'] = 1
@@ -106,6 +154,8 @@ Data_Base1['pscore_forest'] = pscore_forest
 
 # Estimación
 Test = Data_Base[Data_Base.Ano == 2019]
+Test = Test.fillna(0)
+
 Test['Intercepto'] = 1
 Test['riesgo_forest'] = rf_model.predict(Test[variables1])
 Test['riesgo_forest'] = np.where(Test.riesgo_forest < 0.5, 0, 1)
@@ -117,7 +167,6 @@ Test['riesgo_logit'] = np.where(Test.riesgo_logit < 0.5, 0, 1)
 Test['Riesgo_total'] = Test.riesgo_forest+Test.riesgo_logit+Test.riesgo_regression
 
 # Graficos
-# st.write(Test)
 if(selection == 'Descriptive statistics'):
     # st.write(Test)
     fig = px.scatter(
