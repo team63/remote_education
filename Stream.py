@@ -29,13 +29,14 @@ st.title('Vulnerabilidad de municipios en epoca de COVID')
 Data_Base = pd.read_csv("Data_Base_1419.csv")
 Data_Base2 = Data_Base.copy()
 
-CarSD = st.sidebar.slider(
-    label="Desviaciones Estandar",
-    min_value=0.1,
-    max_value=3.0,
-    value=0.0,
-    step=0.1,
-)
+CarSD = 1.5 
+# st.sidebar.slider(
+#     label="Desviaciones Estandar",
+#     min_value=0.1,
+#     max_value=3.0,
+#     value=0.0,
+#     step=0.1,
+# )
 
 tile = st.sidebar.selectbox(
     label="Mapa base",
@@ -82,12 +83,12 @@ pscore = logit1_res.predict(Data_Base1[variables1])
 Data_Base1['pscore'] = pscore
 
 # REGRESSION TREE
-clf = DecisionTreeRegressor(max_depth=3)
-clf = clf.fit(Data_Base1[variables1], Data_Base1['Riesgo'])
-pscore_tree = clf.predict(Data_Base1[variables1])
-Data_Base1['pscore_tree'] = pscore_tree
+rf_modelD = RandomForestClassifier(n_estimators=100, max_depth=6, random_state=42)
+rf_modelD.fit(Data_Base1[variables1], Data_Base1['Riesgo'])
+pscore_forestd = rf_modelD.predict(Data_Base1[variables1])
+Data_Base1['pscore_forestd'] = pscore_forestd
 
-#RANDOM FOREST
+# RANDOM FOREST
 rf_model = RandomForestRegressor(n_estimators=100, max_depth=3, random_state=42)
 rf_model.fit(Data_Base1[variables1], Data_Base1['Riesgo'])
 pscore_forest = rf_model.predict(Data_Base1[variables1])
@@ -98,8 +99,8 @@ Test = Data_Base[Data_Base.Ano == 2019]
 Test['Intercepto'] = 1
 Test['riesgo_forest'] = rf_model.predict(Test[variables1])
 Test['riesgo_forest'] = np.where(Test.riesgo_forest < 0.5, 0, 1)
-Test['riesgo_regression'] = clf.predict(Test[variables1])
-Test['riesgo_regression'] = np.where(Test.riesgo_regression < 0.5, 0, 1)
+Test['riesgo_regression'] = rf_modelD.predict(Test[variables1])
+# Test['riesgo_regression'] = np.where(Test.riesgo_regression < 0.5, 0, 1)
 Test['riesgo_logit'] = logit1_res.predict(Test[variables1])
 Test['riesgo_logit'] = np.where(Test.riesgo_logit < 0.5, 0, 1)
 
@@ -158,17 +159,17 @@ VariableGraph = 'Riesgo_total'
 min_cn, max_cn = MapaDpto[VariableGraph].quantile([0.01,0.99]).apply(round, 2)
 
 colormap = branca.colormap.LinearColormap(
-    colors=['white', 'plum', 'red', 'darkred'],
-    # colors=['white', 'darkred', 'red', 'orange', 'yellow', 'blue', 'darkgreen'],
-    # colors=['white','yellow','orange','red','darkred'],
+    colors=['#FFFFFF', '#6495ED', '#FFA500', '#FF4500'],
     index= [0, 1, 2, 3],
     vmin = min_cn,
     vmax = max_cn
 )
 
-m_crime = folium.Map(location=[4.570868, -74.2973328],
-                        zoom_start=5,
-                        tiles="OpenStreetMap")
+m_crime = folium.Map(
+    location=[4.570868, -74.2973328],
+    zoom_start=5,
+    tiles="OpenStreetMap"
+    )
 
 nombreestilo = lambda x: {
     'fillColor': colormap(x['properties'][VariableGraph]),
