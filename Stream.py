@@ -16,6 +16,15 @@ import plotly.express as px
 
 st.title('Vulnerabilidad de municipios en epoca de COVID')
 
+
+# PAGES = {
+#     "Home": src.pages.home,
+#     "Resources": src.pages.resources,
+#     "Gallery": src.pages.gallery.index,
+#     "Vision": src.pages.vision,
+#     "About": src.pages.about,
+# }
+
 # Crear base de datos
 Data_Base = pd.read_csv("Data_Base_1419.csv")
 Data_Base2 = Data_Base.copy()
@@ -182,3 +191,11 @@ stategeo = folium.GeoJson(
 colormap.add_to(m_crime)
 
 folium_static(m_crime)
+
+DepartamentoFilter = st.sidebar.selectbox(
+    label="Filtro Departamento",
+    options=["ANTIOQUIA", 'BOLÍVAR'],
+    index=0,
+)
+
+st.write(Test[Test['DEPARTAMENTO'] == DepartamentoFilter][['MUNICIPIO', 'DEPARTAMENTO', 'FAMI_TIENEINTERNET', 'FAMI_TIENECOMPUTADOR', 'ESTU_TIENEETNIA', 'COLE_NATURALEZA', 'PUNT_GLOBAL', 'PoblacionTotal', 'ConexMilHab', 'NoAccesosFijos', 'Indice_Rural']])
