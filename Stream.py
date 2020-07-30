@@ -14,16 +14,26 @@ import matplotlib.pyplot as plt
 import streamlit as st
 import plotly.express as px
 
+# Para Mapas
+import folium
+from streamlit_folium import folium_static
+import branca
+import geopandas
+
 st.title('Vulnerabilidad de municipios en epoca de COVID')
 
 
-# PAGES = {
-#     "Home": src.pages.home,
-#     "Resources": src.pages.resources,
-#     "Gallery": src.pages.gallery.index,
-#     "Vision": src.pages.vision,
-#     "About": src.pages.about,
-# }
+st.sidebar.title("Navigation panel")
+selection = st.sidebar.radio(
+    "Go to",
+    [
+        'Home page',
+        'Descriptive statistics',
+        'Model',
+        'Estimation (map)',
+        'Simulation'
+    ]
+    )
 
 # Crear base de datos
 Data_Base = pd.read_csv("Data_Base_1419.csv")
@@ -38,12 +48,12 @@ CarSD = 1.5
 #     step=0.1,
 # )
 
-tile = st.sidebar.selectbox(
-    label="Mapa base",
-    options=["OpenStreetMap", "Stamen Toner", "Stamen Terrain",
-    "Stamen Watercolor", "CartoDB positron", "CartoDB dark_matter"],
-    index=0,
-)
+# tile = st.sidebar.selectbox(
+#     label="Mapa base",
+#     options=["OpenStreetMap", "Stamen Toner", "Stamen Terrain",
+#     "Stamen Watercolor", "CartoDB positron", "CartoDB dark_matter"],
+#     index=0,
+# )
 
 Data_Base2['Riesgo'] = 2
 for i in [2014, 2015, 2016, 2017, 2018, 2019]:
@@ -108,19 +118,46 @@ Test['Riesgo_total'] = Test.riesgo_forest+Test.riesgo_logit+Test.riesgo_regressi
 
 # Graficos
 # st.write(Test)
+if(selection == 'Descriptive statistics'):
+    # st.write(Test)
+    fig = px.scatter(
+        Test,
+        x="ConexMilHab",
+        y="PUNT_GLOBAL",
+        color="FAMI_TIENEINTERNET",
+        size='PoblacionTotal',
+        hover_data = ['MUNICIPIO']
+    )
+    st.plotly_chart(fig)
+
+    fig2 = px.scatter(
+        Test,
+        x="FAMI_TIENECOMPUTADOR",
+        y="PUNT_GLOBAL",
+        title='Computer ownership vs Global Score',
+        labels={
+            "FAMI_TIENECOMPUTADOR": "Computer ownership",
+            "PUNT_GLOBAL": "Global Score"
+        },
+        color='Intercepto',
+        color_continuous_scale=['#FFA500', '#FFA500']
+    )
+    st.plotly_chart(fig2)
 
 
-fig = px.box(
-    Test,
-    x="Riesgo_total",
-    y="ConexMilHab",
-    # title='Connectivity vs Year', labels={
-    # "Ano": "Year",
-    # "ConexMilHab": "Connectivity"}
-)
-st.plotly_chart(fig)
+if(selection == 'Model'):
+    fig = px.box(
+        Test,
+        x="Riesgo_total",
+        y="ConexMilHab",
+        # title='Connectivity vs Year', labels={
+        # "Ano": "Year",
+        # "ConexMilHab": "Connectivity"}
+    )
+    
+    st.plotly_chart(fig)
 
-# Mapa 1
+# # Mapa 1
 # DirCol = pd.read_excel(
 #     "DirecionesCol.xlsx")
 # DirCol['Magnitude'] = 10
@@ -138,65 +175,61 @@ st.plotly_chart(fig)
 # MapaCol.update_layout(mapbox_style="open-street-map")
 # MapaCol.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
 
-# st.write(MapaCol)
+# st.plotly((MapaCol))
 
 # Mapa 2
-import geopandas
-import branca
-from streamlit_folium import folium_static
-import folium
+if(selection == 'Estimation (map)'):
+    file = "ShapeMap/MGN_MPIO_POLITICO.shp"
+    MapaDpto = geopandas.read_file(file)
+    MapaDpto['MPIO_CCDGO_C'] = pd.to_numeric(MapaDpto['DPTO_CCDGO'] + MapaDpto['MPIO_CCDGO'])
 
+    MapaDpto = MapaDpto.join(Test.set_index('COLE_COD_MCPIO_UBICACION'), how = 'left', on = 'MPIO_CCDGO_C')
+    MapaDpto.fillna(0, inplace = True)
 
-file = "ShapeMap/MGN_MPIO_POLITICO.shp"
-MapaDpto = geopandas.read_file(file)
-MapaDpto['MPIO_CCDGO_C'] = pd.to_numeric(MapaDpto['DPTO_CCDGO'] + MapaDpto['MPIO_CCDGO'])
+    VariableGraph = 'Riesgo_total'
 
-MapaDpto = MapaDpto.join(Test.set_index('COLE_COD_MCPIO_UBICACION'), how = 'left', on = 'MPIO_CCDGO_C')
-MapaDpto.fillna(0, inplace = True)
+    min_cn, max_cn = MapaDpto[VariableGraph].quantile([0.01,0.99]).apply(round, 2)
 
-VariableGraph = 'Riesgo_total'
-
-min_cn, max_cn = MapaDpto[VariableGraph].quantile([0.01,0.99]).apply(round, 2)
-
-colormap = branca.colormap.LinearColormap(
-    colors=['#FFFFFF', '#6495ED', '#FFA500', '#FF4500'],
-    index= [0, 1, 2, 3],
-    vmin = min_cn,
-    vmax = max_cn
-)
-
-m_crime = folium.Map(
-    location=[4.570868, -74.2973328],
-    zoom_start=5,
-    tiles="OpenStreetMap"
+    colormap = branca.colormap.LinearColormap(
+        colors=['#FFFFFF', '#6495ED', '#FFA500', '#FF4500'],
+        index= [0, 1, 2, 3],
+        vmin = min_cn,
+        vmax = max_cn
     )
 
-nombreestilo = lambda x: {
-    'fillColor': colormap(x['properties'][VariableGraph]),
-    'color': 'black',
-    'weight':0,
-    'fillOpacity':0.75
-}
+    m_crime = folium.Map(
+        location=[4.570868, -74.2973328],
+        zoom_start=5,
+        tiles="OpenStreetMap"
+        )
 
-stategeo = folium.GeoJson(
-    MapaDpto.to_json(),
-    name = 'SABER PRO - Colombia',
-    style_function = nombreestilo,
-    tooltip = folium.GeoJsonTooltip(
-        fields = ['MPIO_CNMBR', VariableGraph],
-        aliases = ['Municipio', 'Puntaje'], 
-        localize = True
+    nombreestilo = lambda x: {
+        'fillColor': colormap(x['properties'][VariableGraph]),
+        'color': 'black',
+        'weight':0,
+        'fillOpacity':0.75
+    }
+
+    stategeo = folium.GeoJson(
+        MapaDpto.to_json(),
+        name = 'SABER PRO - Colombia',
+        style_function = nombreestilo,
+        tooltip = folium.GeoJsonTooltip(
+            fields = ['MPIO_CNMBR', VariableGraph],
+            aliases = ['Municipio', 'Puntaje'], 
+            localize = True
+        )
+    ).add_to(m_crime)
+
+    colormap.add_to(m_crime)
+
+    folium_static(m_crime)
+
+if(selection == 'Simulation'):
+    DepartamentoFilter = st.sidebar.selectbox(
+        label="Filtro Departamento",
+        options=Test['DEPARTAMENTO'].unique(),
+        index=0,
     )
-).add_to(m_crime)
 
-colormap.add_to(m_crime)
-
-folium_static(m_crime)
-
-DepartamentoFilter = st.sidebar.selectbox(
-    label="Filtro Departamento",
-    options=["ANTIOQUIA", 'BOLÍVAR'],
-    index=0,
-)
-
-st.write(Test[Test['DEPARTAMENTO'] == DepartamentoFilter][['MUNICIPIO', 'DEPARTAMENTO', 'FAMI_TIENEINTERNET', 'FAMI_TIENECOMPUTADOR', 'ESTU_TIENEETNIA', 'COLE_NATURALEZA', 'PUNT_GLOBAL', 'PoblacionTotal', 'ConexMilHab', 'NoAccesosFijos', 'Indice_Rural']])
+    st.write(Test[Test['DEPARTAMENTO'] == DepartamentoFilter][['MUNICIPIO', 'DEPARTAMENTO', 'FAMI_TIENEINTERNET', 'FAMI_TIENECOMPUTADOR', 'ESTU_TIENEETNIA', 'COLE_NATURALEZA', 'PUNT_GLOBAL', 'PoblacionTotal', 'ConexMilHab', 'NoAccesosFijos', 'Indice_Rural']])
