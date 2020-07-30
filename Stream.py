@@ -11,14 +11,15 @@ from sklearn.ensemble import RandomForestRegressor
 import sklearn
 import matplotlib.pyplot as plt
 
-import streamlit as st
-import plotly.express as px
-
 # Para Mapas
-import folium
-from streamlit_folium import folium_static
+import plotly.express as px
 import branca
 import geopandas
+import folium
+
+# Streamlit
+import streamlit as st
+from streamlit_folium import folium_static
 
 st.title('Vulnerabilidad de municipios en epoca de COVID')
 
@@ -36,72 +37,20 @@ selection = st.sidebar.radio(
     ]
     )
 
+CarSD = st.sidebar.slider(
+    label = "Desviaciones Estandar",
+    min_value = 0.0,
+    max_value = 3.0,
+    value = 1.0,
+    step = 0.05,
+)
+
 # Crear base de datos
-Data_Base = pd.read_csv("Data_Base_1419.csv")
+Data_Base = pd.read_csv(
+    "https://raw.githubusercontent.com/IngFrustrado/AppDS4A/master/Data_Base_1419.csv")
+
+
 Data_Base2 = Data_Base.copy()
-
-if selection == 'Hoja para pruebas':
-    DEPARTAMENTO_all = sorted(Data_Base.DEPARTAMENTO.unique().astype(str))
-    DEPARTAMENTO = st.sidebar.selectbox(
-        "Select DEPARTAMENTO",
-        ['All'] + DEPARTAMENTO_all
-    )
-
-    MUNICIPIO_all = sorted(Data_Base[Data_Base.DEPARTAMENTO == DEPARTAMENTO].MUNICIPIO.unique())
-    MUNICIPIO = st.sidebar.selectbox(
-        "Select MUNICIPIO",
-        ['All'] + MUNICIPIO_all
-    )
-
-
-    if MUNICIPIO == 'All':
-        pass
-        if DEPARTAMENTO == 'All':
-            st.write(Data_Base)
-            pass
-        else:
-            st.write(Data_Base[(Data_Base.DEPARTAMENTO == DEPARTAMENTO)])
-        pass
-    else:
-        st.write(Data_Base[(Data_Base.DEPARTAMENTO == DEPARTAMENTO)
-                        & (Data_Base.MUNICIPIO == MUNICIPIO)])
-        pass
-
-
-    # COLE_COD_MCPIO_UBICACION_all = Data_Base.COLE_COD_MCPIO_UBICACION.unique()
-    # COLE_COD_MCPIO_UBICACION = st.selectbox(
-    #     "Select COLE_COD_MCPIO_UBICACION",
-    #     COLE_COD_MCPIO_UBICACION_all
-    # )
-
-    # st.write(Data_Base[(Data_Base.COLE_COD_MCPIO_UBICACION == COLE_COD_MCPIO_UBICACION)])
-
-    # st.write(Data_Base.columns)
-
-    # selected = st.selectbox('Select one option:', [
-    #                         '', 'First one', 'Second one'], format_func=lambda x: 'Select an option' if x == '' else x)
-
-    # if selected:
-    #     st.success('Yay! 🎉')
-    # else:
-    #     st.warning('No option is selected')
-    pass
-
-CarSD = 1.5 
-# st.sidebar.slider(
-#     label="Desviaciones Estandar",
-#     min_value=0.1,
-#     max_value=3.0,
-#     value=0.0,
-#     step=0.1,
-# )
-
-# tile = st.sidebar.selectbox(
-#     label="Mapa base",
-#     options=["OpenStreetMap", "Stamen Toner", "Stamen Terrain",
-#     "Stamen Watercolor", "CartoDB positron", "CartoDB dark_matter"],
-#     index=0,
-# )
 
 Data_Base2['Riesgo'] = 2
 for i in [2014, 2015, 2016, 2017, 2018, 2019]:
@@ -168,16 +117,32 @@ Test['Riesgo_total'] = Test.riesgo_forest+Test.riesgo_logit+Test.riesgo_regressi
 
 # Graficos
 if(selection == 'Descriptive statistics'):
+    Anno = st.slider(
+        label="Anno",
+        min_value = 2014,
+        max_value = 2018,
+        value = 2018,
+        step = 1
+        )
+
+    figHist = px.histogram(
+        Data_Base2[Data_Base2.Ano == Anno],
+        x="PUNT_GLOBAL",
+        color="Riesgo",
+        nbins=150
+        )
+    st.plotly_chart(figHist)
+
     # st.write(Test)
-    fig = px.scatter(
-        Test,
-        x="ConexMilHab",
-        y="PUNT_GLOBAL",
-        color="FAMI_TIENEINTERNET",
-        size='PoblacionTotal',
-        hover_data = ['MUNICIPIO']
-    )
-    st.plotly_chart(fig)
+    # fig = px.scatter(
+    #     Test,
+    #     x="ConexMilHab",
+    #     y="PUNT_GLOBAL",
+    #     color="FAMI_TIENEINTERNET",
+    #     size='PoblacionTotal',
+    #     hover_data = ['MUNICIPIO']
+    # )
+    # st.plotly_chart(fig)
 
     fig2 = px.scatter(
         Test,
@@ -228,12 +193,29 @@ if(selection == 'Model'):
 
 # Mapa 2
 if(selection == 'Estimation (map)'):
-    file = "ShapeMap/MGN_MPIO_POLITICO.shp"
+    file = "MGN_MPIO_POLITICO.shp"
     MapaDpto = geopandas.read_file(file)
     MapaDpto['MPIO_CCDGO_C'] = pd.to_numeric(MapaDpto['DPTO_CCDGO'] + MapaDpto['MPIO_CCDGO'])
 
     MapaDpto = MapaDpto.join(Test.set_index('COLE_COD_MCPIO_UBICACION'), how = 'left', on = 'MPIO_CCDGO_C')
     MapaDpto.fillna(0, inplace = True)
+
+    DPTO_CNMBR_all = sorted(MapaDpto.DPTO_CNMBR.unique().astype(str))
+    DPTO_CNMBR = st.sidebar.selectbox(
+        "Select DPTO_CNMBR",
+        ['All'] + DPTO_CNMBR_all
+    )
+    if DPTO_CNMBR != 'All':
+        MapaDpto = MapaDpto[MapaDpto.DPTO_CNMBR == DPTO_CNMBR]
+        DataFilter = pd.DataFrame(MapaDpto.drop(columns='geometry'))
+        st.write(
+            px.pie(
+                DataFilter[DataFilter.DPTO_CNMBR == DPTO_CNMBR],
+                values='Intercepto',
+                names='Riesgo_total'  # , title='Population of European continent'
+            )
+        )
+        pass
 
     VariableGraph = 'Riesgo_total'
 
@@ -246,10 +228,17 @@ if(selection == 'Estimation (map)'):
         vmax = max_cn
     )
 
+    tile = st.sidebar.selectbox(
+        label="Mapa base",
+        options=["CartoDB dark_matter", "OpenStreetMap", "Stamen Toner", "Stamen Terrain",
+                "Stamen Watercolor", "CartoDB positron"],
+        index=0,
+    )
+
     m_crime = folium.Map(
         location=[4.570868, -74.2973328],
         zoom_start=5,
-        tiles="OpenStreetMap"
+        tiles = tile
         )
 
     nombreestilo = lambda x: {
@@ -282,3 +271,46 @@ if(selection == 'Simulation'):
     )
 
     st.write(Test[Test['DEPARTAMENTO'] == DepartamentoFilter][['MUNICIPIO', 'DEPARTAMENTO', 'FAMI_TIENEINTERNET', 'FAMI_TIENECOMPUTADOR', 'ESTU_TIENEETNIA', 'COLE_NATURALEZA', 'PUNT_GLOBAL', 'PoblacionTotal', 'ConexMilHab', 'NoAccesosFijos', 'Indice_Rural']])
+
+
+if selection == 'Hoja para pruebas':
+    DEPARTAMENTO_all = sorted(Data_Base.DEPARTAMENTO.unique().astype(str))
+    DEPARTAMENTO = st.sidebar.selectbox(
+        "Select DEPARTAMENTO",
+        ['All'] + DEPARTAMENTO_all
+    )
+
+    MUNICIPIO_all = sorted(
+        Data_Base[Data_Base.DEPARTAMENTO == DEPARTAMENTO].MUNICIPIO.unique())
+    MUNICIPIO = st.sidebar.selectbox(
+        "Select MUNICIPIO",
+        ['All'] + MUNICIPIO_all
+    )
+    if MUNICIPIO == 'All':
+        pass
+        if DEPARTAMENTO == 'All':
+            st.write(Data_Base)
+            pass
+        else:
+            st.write(Data_Base[(Data_Base.DEPARTAMENTO == DEPARTAMENTO)])
+        pass
+    else:
+        st.write(Data_Base[
+            (Data_Base.DEPARTAMENTO == DEPARTAMENTO)
+            & (Data_Base.MUNICIPIO == MUNICIPIO)
+        ])
+        pass
+    # COLE_COD_MCPIO_UBICACION_all = Data_Base.COLE_COD_MCPIO_UBICACION.unique()
+    # COLE_COD_MCPIO_UBICACION = st.selectbox(
+    #     "Select COLE_COD_MCPIO_UBICACION",
+    #     COLE_COD_MCPIO_UBICACION_all
+    # )
+    # st.write(Data_Base[(Data_Base.COLE_COD_MCPIO_UBICACION == COLE_COD_MCPIO_UBICACION)])
+    # st.write(Data_Base.columns)
+    # selected = st.selectbox('Select one option:', [
+    #                         '', 'First one', 'Second one'], format_func=lambda x: 'Select an option' if x == '' else x)
+    # if selected:
+    #     st.success('Yay! 🎉')
+    # else:
+    #     st.warning('No option is selected')
+    pass
