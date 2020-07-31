@@ -23,9 +23,12 @@ import streamlit as st
 from streamlit_folium import folium_static
 from pandas_profiling import ProfileReport
 from streamlit_pandas_profiling import st_profile_report
+from streamlit_embedcode import github_gist
+import streamlit.components.v1 as components
+from PIL import Image
 
 
-st.title('Vulnerabilidad de municipios en epoca de COVID')
+st.title('Remote Education in the time of COVID-19')
 
 
 st.sidebar.title("Navigation panel")
@@ -49,6 +52,9 @@ CarSD = st.sidebar.slider(
     value = 1.0,
     step = 0.05,
 )
+if CarSD != 1:
+    st.warning('Nuestro analisis se realizo a una desviación estandar')
+    pass
 
 # Crear base de datos
 Data_Base = pd.read_csv(
@@ -121,6 +127,15 @@ Test['riesgo_logit'] = np.where(Test.riesgo_logit < 0.5, 0, 1)
 Test['Riesgo_total'] = Test.riesgo_forest+Test.riesgo_logit+Test.riesgo_regression
 
 # Graficos
+if(selection == 'Home page'):
+    st.image(
+        Image.open('img/Front.jpg'),
+        # caption='Sunrise by the mountains',
+        use_column_width=True
+        )
+    pass
+
+
 if(selection == 'Descriptive statistics'):
     Anno = st.sidebar.slider(
         label="Anno",
@@ -166,8 +181,8 @@ if(selection == 'Descriptive statistics'):
 
     # HexBin =
     plt.hexbin(
-        Data_Base2[varx],
-        Data_Base2[vary],
+        Data_Base2[Data_Base2.Ano == Anno][varx],
+        Data_Base2[Data_Base2.Ano == Anno][vary],
         gridsize=(30, 15),
         cmap=colorsList
     )
@@ -234,7 +249,7 @@ if(selection == 'Model'):
 
 # Mapa 2
 if(selection == 'Estimation (map)'):
-    file = "MGN_MPIO_POLITICO.shp"
+    file = "ShapeMap/MGN_MPIO_POLITICO.shp"
     MapaDpto = geopandas.read_file(file)
     MapaDpto['MPIO_CCDGO_C'] = pd.to_numeric(MapaDpto['DPTO_CCDGO'] + MapaDpto['MPIO_CCDGO'])
 
