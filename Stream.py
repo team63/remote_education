@@ -9,6 +9,7 @@ from sklearn.metrics import roc_curve, auc, accuracy_score
 from sklearn.ensemble import RandomForestRegressor
 
 import sklearn
+import matplotlib
 import matplotlib.pyplot as plt
 
 # Para Mapas
@@ -20,6 +21,9 @@ import folium
 # Streamlit
 import streamlit as st
 from streamlit_folium import folium_static
+from pandas_profiling import ProfileReport
+from streamlit_pandas_profiling import st_profile_report
+
 
 st.title('Vulnerabilidad de municipios en epoca de COVID')
 
@@ -33,7 +37,8 @@ selection = st.sidebar.radio(
         'Model',
         'Estimation (map)',
         'Simulation',
-        'Hoja para pruebas'
+        'Hoja para pruebas',
+        'Pandas Profiling in Streamlit'
     ]
     )
 
@@ -58,7 +63,7 @@ for i in [2014, 2015, 2016, 2017, 2018, 2019]:
     Data_Base2['Riesgo'] = np.where(i == Data_Base2.Ano, np.where(Data_Base2['PUNT_GLOBAL'] < risk, 1, 0), Data_Base2.Riesgo)
 
 Data_Base1 = Data_Base2[Data_Base2.Ano < 2019]
-Data_Base1 = Data_Base1.fillna(0)
+Data_Base1 = Data_Base1[~Data_Base1.isin([np.nan, np.inf, -np.inf]).any(1)]
 
 # Modelo LOGIT
 Data_Base1['Intercepto'] = 1
@@ -103,7 +108,7 @@ Data_Base1['pscore_forest'] = pscore_forest
 
 # Estimación
 Test = Data_Base[Data_Base.Ano == 2019]
-Test = Test.fillna(0)
+Test = Test[~Test.isin([np.nan, np.inf, -np.inf]).any(1)]
 
 Test['Intercepto'] = 1
 Test['riesgo_forest'] = rf_model.predict(Test[variables1])
@@ -117,7 +122,7 @@ Test['Riesgo_total'] = Test.riesgo_forest+Test.riesgo_logit+Test.riesgo_regressi
 
 # Graficos
 if(selection == 'Descriptive statistics'):
-    Anno = st.slider(
+    Anno = st.sidebar.slider(
         label="Anno",
         min_value = 2014,
         max_value = 2018,
@@ -133,6 +138,42 @@ if(selection == 'Descriptive statistics'):
         )
     st.plotly_chart(figHist)
 
+    VariablesNum = [
+        'PUNT_GLOBAL',
+        'FAMI_TIENEINTERNET',
+        'FAMI_TIENECOMPUTADOR',
+        'ESTU_TIENEETNIA',
+        'COLE_NATURALEZA',
+        'ConexMilHab',
+        'PoblacionTotal',
+        'Indice_Rural'
+    ]
+
+    varx = st.sidebar.selectbox(
+        label="Variable axis x",
+        options=VariablesNum,
+        index=0,
+    )
+
+    vary = st.sidebar.selectbox(
+        label="Variable axis y",
+        options=VariablesNum,
+        index=0,
+    )
+
+    colorsList = matplotlib.colors.ListedColormap(
+        ['#FFFFFF', '#6495ED', '#FFA500', '#FF4500'])
+
+    # HexBin =
+    plt.hexbin(
+        Data_Base2[varx],
+        Data_Base2[vary],
+        gridsize=(30, 15),
+        cmap=colorsList
+    )
+    st.pyplot()
+
+
     # st.write(Test)
     # fig = px.scatter(
     #     Test,
@@ -146,13 +187,13 @@ if(selection == 'Descriptive statistics'):
 
     fig2 = px.scatter(
         Test,
-        x="FAMI_TIENECOMPUTADOR",
-        y="PUNT_GLOBAL",
+        x= varx,
+        y= vary,
         title='Computer ownership vs Global Score',
-        labels={
-            "FAMI_TIENECOMPUTADOR": "Computer ownership",
-            "PUNT_GLOBAL": "Global Score"
-        },
+        # labels={
+        #     "FAMI_TIENECOMPUTADOR": "Computer ownership",
+        #     "PUNT_GLOBAL": "Global Score"
+        # },
         color='Intercepto',
         color_continuous_scale=['#FFA500', '#FFA500']
     )
@@ -222,7 +263,7 @@ if(selection == 'Estimation (map)'):
     min_cn, max_cn = MapaDpto[VariableGraph].quantile([0.01,0.99]).apply(round, 2)
 
     colormap = branca.colormap.LinearColormap(
-        colors=['#FFFFFF', '#6495ED', '#FFA500', '#FF4500'],
+        colors = ['#FFFFFF', '#6495ED', '#FFA500', '#FF4500'],
         index= [0, 1, 2, 3],
         vmin = min_cn,
         vmax = max_cn
@@ -314,3 +355,9 @@ if selection == 'Hoja para pruebas':
     # else:
     #     st.warning('No option is selected')
     pass
+
+if selection == 'Pandas Profiling in Streamlit':
+    pr = ProfileReport(Data_Base, explorative=True)
+    st_profile_report(pr)
+    pass
+
