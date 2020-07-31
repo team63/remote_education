@@ -23,9 +23,12 @@ import streamlit as st
 from streamlit_folium import folium_static
 from pandas_profiling import ProfileReport
 from streamlit_pandas_profiling import st_profile_report
+from PIL import Image
+
+# Tableau
 from streamlit_embedcode import github_gist
 import streamlit.components.v1 as components
-from PIL import Image
+
 
 
 st.title('Remote Education in the time of COVID-19')
@@ -45,17 +48,6 @@ selection = st.sidebar.radio(
     ]
     )
 
-CarSD = st.sidebar.slider(
-    label = "Desviaciones Estandar",
-    min_value = 0.0,
-    max_value = 3.0,
-    value = 1.0,
-    step = 0.05,
-)
-if CarSD != 1:
-    st.warning('Nuestro analisis se realizo a una desviación estandar')
-    pass
-
 # Crear base de datos
 Data_Base = pd.read_csv(
     "https://raw.githubusercontent.com/IngFrustrado/AppDS4A/master/Data_Base_1419.csv")
@@ -63,10 +55,23 @@ Data_Base = pd.read_csv(
 
 Data_Base2 = Data_Base.copy()
 
+risk = st.sidebar.slider(
+    label="Theshold Score",
+    min_value=int(Data_Base2['PUNT_GLOBAL'].mean() - 2 * Data_Base2['PUNT_GLOBAL'].std()),
+    max_value=int(Data_Base2['PUNT_GLOBAL'].mean() + 1 * Data_Base2['PUNT_GLOBAL'].std()),
+    value= int(Data_Base2['PUNT_GLOBAL'].mean() - 1 * Data_Base2['PUNT_GLOBAL'].std()),
+    step=1
+)
+if risk != int(Data_Base2['PUNT_GLOBAL'].mean() - 1 * Data_Base2['PUNT_GLOBAL'].std()):
+    st.sidebar.warning(
+        'Our analysis was conducted with a threshold score of ' +
+        str(
+            int(Data_Base2['PUNT_GLOBAL'].mean() - 1 * Data_Base2['PUNT_GLOBAL'].std())
+        ))
+    pass
+
 Data_Base2['Riesgo'] = 2
-for i in [2014, 2015, 2016, 2017, 2018, 2019]:
-    risk = Data_Base2[Data_Base2.Ano == i]['PUNT_GLOBAL'].mean() - CarSD * Data_Base2[Data_Base2.Ano == i]['PUNT_GLOBAL'].std()
-    Data_Base2['Riesgo'] = np.where(i == Data_Base2.Ano, np.where(Data_Base2['PUNT_GLOBAL'] < risk, 1, 0), Data_Base2.Riesgo)
+Data_Base2['Riesgo'] = np.where(Data_Base2['PUNT_GLOBAL'] < risk, 1, 0)
 
 Data_Base1 = Data_Base2[Data_Base2.Ano < 2019]
 Data_Base1 = Data_Base1[~Data_Base1.isin([np.nan, np.inf, -np.inf]).any(1)]
@@ -137,13 +142,11 @@ if(selection == 'Home page'):
 
 
 if(selection == 'Descriptive statistics'):
-    Anno = st.sidebar.slider(
-        label="Anno",
-        min_value = 2014,
-        max_value = 2018,
-        value = 2018,
-        step = 1
-        )
+    Anno = st.selectbox(
+        label="Año",
+        options= [2014, 2015, 2016, 2017, 2018],
+        index=0,
+    )
 
     figHist = px.histogram(
         Data_Base2[Data_Base2.Ano == Anno],
@@ -153,40 +156,47 @@ if(selection == 'Descriptive statistics'):
         )
     st.plotly_chart(figHist)
 
-    VariablesNum = [
-        'PUNT_GLOBAL',
-        'FAMI_TIENEINTERNET',
-        'FAMI_TIENECOMPUTADOR',
-        'ESTU_TIENEETNIA',
-        'COLE_NATURALEZA',
-        'ConexMilHab',
-        'PoblacionTotal',
-        'Indice_Rural'
-    ]
+    # VariablesNum = [
+    #     'PUNT_GLOBAL',
+    #     'FAMI_TIENEINTERNET',
+    #     'FAMI_TIENECOMPUTADOR',
+    #     'ESTU_TIENEETNIA',
+    #     'COLE_NATURALEZA',
+    #     'ConexMilHab',
+    #     'PoblacionTotal',
+    #     'Indice_Rural'
+    # ]
 
-    varx = st.sidebar.selectbox(
-        label="Variable axis x",
-        options=VariablesNum,
-        index=0,
-    )
+    # varx = st.sidebar.selectbox(
+    #     label="Variable axis x",
+    #     options=VariablesNum,
+    #     index=0,
+    # )
 
-    vary = st.sidebar.selectbox(
-        label="Variable axis y",
-        options=VariablesNum,
-        index=0,
-    )
+    # vary = st.sidebar.selectbox(
+    #     label="Variable axis y",
+    #     options=VariablesNum,
+    #     index=0,
+    # )
 
-    colorsList = matplotlib.colors.ListedColormap(
-        ['#FFFFFF', '#6495ED', '#FFA500', '#FF4500'])
+    # colorsList = matplotlib.colors.ListedColormap(
+    #     ['#FFFFFF', '#6495ED', '#FFA500', '#FF4500'])
 
-    # HexBin =
-    plt.hexbin(
-        Data_Base2[Data_Base2.Ano == Anno][varx],
-        Data_Base2[Data_Base2.Ano == Anno][vary],
-        gridsize=(30, 15),
-        cmap=colorsList
-    )
-    st.pyplot()
+    # # HexBin =
+    # plt.hexbin(
+    #     Data_Base2[Data_Base2.Ano == Anno][varx],
+    #     Data_Base2[Data_Base2.Ano == Anno][vary],
+    #     gridsize=(30, 15),
+    #     cmap=colorsList
+    # )
+
+    # st.pyplot()
+
+    # st.video('https://www.youtube.com/watch?v=u6d9Eeg1jok')
+
+    components.iframe(
+        "https://public.tableau.com/views/Semana7_15945094881460/PRELIMINARYDESIGN?:showVizHome=no&:embed=true", scrolling=True, width = 700, height=700)
+
 
 
     # st.write(Test)
@@ -200,19 +210,19 @@ if(selection == 'Descriptive statistics'):
     # )
     # st.plotly_chart(fig)
 
-    fig2 = px.scatter(
-        Test,
-        x= varx,
-        y= vary,
-        title='Computer ownership vs Global Score',
-        # labels={
-        #     "FAMI_TIENECOMPUTADOR": "Computer ownership",
-        #     "PUNT_GLOBAL": "Global Score"
-        # },
-        color='Intercepto',
-        color_continuous_scale=['#FFA500', '#FFA500']
-    )
-    st.plotly_chart(fig2)
+    # fig2 = px.scatter(
+    #     Test,
+    #     x= varx,
+    #     y= vary,
+    #     title='Computer ownership vs Global Score',
+    #     # labels={
+    #     #     "FAMI_TIENECOMPUTADOR": "Computer ownership",
+    #     #     "PUNT_GLOBAL": "Global Score"
+    #     # },
+    #     color='Intercepto',
+    #     color_continuous_scale=['#FFA500', '#FFA500']
+    # )
+    # st.plotly_chart(fig2)
 
 
 if(selection == 'Model'):
