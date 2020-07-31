@@ -21,7 +21,7 @@ import folium
 # Streamlit
 import streamlit as st
 from streamlit_folium import folium_static
-from pandas_profiling import ProfileReport
+# from pandas_profiling import ProfileReport
 from streamlit_pandas_profiling import st_profile_report
 from PIL import Image
 
@@ -42,94 +42,102 @@ selection = st.sidebar.radio(
         'Descriptive statistics',
         'Model',
         'Estimation (map)',
-        'Simulation',
-        'Hoja para pruebas',
-        'Pandas Profiling in Streamlit'
+        'Simulation'
+        # 'Hoja para pruebas',
+        # 'Pandas Profiling in Streamlit'
     ]
     )
 
-# Crear base de datos
-Data_Base = pd.read_csv(
-    "https://raw.githubusercontent.com/IngFrustrado/AppDS4A/master/Data_Base_1419.csv")
+if (selection != 'Home page') & (selection != 'Descriptive statistics'):
+    # Crear base de datos
+    Data_Base = pd.read_csv(
+        "https://raw.githubusercontent.com/IngFrustrado/AppDS4A/master/Data_Base_1419.csv",
+        encoding='UTF-8'
+        )
 
 
-Data_Base2 = Data_Base.copy()
+    Data_Base2 = Data_Base.copy()
 
-risk = st.sidebar.slider(
-    label="Theshold Score",
-    min_value=int(Data_Base2['PUNT_GLOBAL'].mean() - 2 * Data_Base2['PUNT_GLOBAL'].std()),
-    max_value=int(Data_Base2['PUNT_GLOBAL'].mean() + 1 * Data_Base2['PUNT_GLOBAL'].std()),
-    value= int(Data_Base2['PUNT_GLOBAL'].mean() - 1 * Data_Base2['PUNT_GLOBAL'].std()),
-    step=1
-)
-if risk != int(Data_Base2['PUNT_GLOBAL'].mean() - 1 * Data_Base2['PUNT_GLOBAL'].std()):
-    st.sidebar.warning(
-        'Our analysis was conducted with a threshold score of ' +
-        str(
-            int(Data_Base2['PUNT_GLOBAL'].mean() - 1 * Data_Base2['PUNT_GLOBAL'].std())
-        ))
-    pass
+    risk = st.sidebar.slider(
+        label="Theshold Score",
+        min_value=int(Data_Base2['PUNT_GLOBAL'].mean() - 2 * Data_Base2['PUNT_GLOBAL'].std()),
+        max_value=int(Data_Base2['PUNT_GLOBAL'].mean() + 1 * Data_Base2['PUNT_GLOBAL'].std()),
+        value= int(Data_Base2['PUNT_GLOBAL'].mean() - 1 * Data_Base2['PUNT_GLOBAL'].std()),
+        step=1
+    )
+    if risk != int(Data_Base2['PUNT_GLOBAL'].mean() - 1 * Data_Base2['PUNT_GLOBAL'].std()):
+        st.sidebar.warning(
+            'Our analysis was conducted with a threshold score of ' +
+            str(
+                int(Data_Base2['PUNT_GLOBAL'].mean() - 1 * Data_Base2['PUNT_GLOBAL'].std())
+            ))
+        pass
 
-Data_Base2['Riesgo'] = 2
-Data_Base2['Riesgo'] = np.where(Data_Base2['PUNT_GLOBAL'] < risk, 1, 0)
+    Data_Base2['Riesgo'] = 2
+    Data_Base2['Riesgo'] = np.where(Data_Base2['PUNT_GLOBAL'] < risk, 1, 0)
 
-Data_Base1 = Data_Base2[Data_Base2.Ano < 2019]
-Data_Base1 = Data_Base1[~Data_Base1.isin([np.nan, np.inf, -np.inf]).any(1)]
+    Data_Base1 = Data_Base2[Data_Base2.Ano < 2019]
+    Data_Base1 = Data_Base1[~Data_Base1.isin([np.nan, np.inf, -np.inf]).any(1)]
 
-# Modelo LOGIT
-Data_Base1['Intercepto'] = 1
-variables = [
-    'Intercepto',
-    'FAMI_TIENEINTERNET', 
-    'FAMI_TIENECOMPUTADOR',
-    'ESTU_TIENEETNIA',
-    'COLE_NATURALEZA',
-    'ConexMilHab',
-    'PoblacionTotal',
-    'Indice_Rural'
-    ]
+    # Modelo LOGIT
+    Data_Base1['Intercepto'] = 1
+    variables = [
+        'Intercepto',
+        'FAMI_TIENEINTERNET', 
+        'FAMI_TIENECOMPUTADOR',
+        'ESTU_TIENEETNIA',
+        'COLE_NATURALEZA',
+        'ConexMilHab',
+        'PoblacionTotal',
+        'Indice_Rural'
+        ]
 
-logit1 = sm.Logit(Data_Base1['Riesgo'], Data_Base1[variables])
-logit1_res = logit1.fit()
-
-var_tmp = variables
-while 0 != sum(logit1_res.pvalues > 0.05):
-    T = len(logit1_res.pvalues)
-    #print(logit1_res.pvalues.sort_values(ascending=True).reset_index()[-1:]['index'])
-    var_tmp = logit1_res.pvalues.sort_values(
-        ascending=True).reset_index()[:(T-1)]['index']
-    logit1 = sm.Logit(Data_Base1['Riesgo'], Data_Base1[var_tmp])
+    logit1 = sm.Logit(Data_Base1['Riesgo'], Data_Base1[variables])
     logit1_res = logit1.fit()
 
-variables1 = var_tmp
-pscore = logit1_res.predict(Data_Base1[variables1])
-Data_Base1['pscore'] = pscore
+    var_tmp = variables
+    while 0 != sum(logit1_res.pvalues > 0.05):
+        T = len(logit1_res.pvalues)
+        #print(logit1_res.pvalues.sort_values(ascending=True).reset_index()[-1:]['index'])
+        var_tmp = logit1_res.pvalues.sort_values(
+            ascending=True).reset_index()[:(T-1)]['index']
+        logit1 = sm.Logit(Data_Base1['Riesgo'], Data_Base1[var_tmp])
+        logit1_res = logit1.fit()
 
-# REGRESSION TREE
-rf_modelD = RandomForestClassifier(n_estimators=100, max_depth=6, random_state=42)
-rf_modelD.fit(Data_Base1[variables1], Data_Base1['Riesgo'])
-pscore_forestd = rf_modelD.predict(Data_Base1[variables1])
-Data_Base1['pscore_forestd'] = pscore_forestd
+    variables1 = var_tmp
+    pscore = logit1_res.predict(Data_Base1[variables1])
+    Data_Base1['pscore'] = pscore
 
-# RANDOM FOREST
-rf_model = RandomForestRegressor(n_estimators=100, max_depth=3, random_state=42)
-rf_model.fit(Data_Base1[variables1], Data_Base1['Riesgo'])
-pscore_forest = rf_model.predict(Data_Base1[variables1])
-Data_Base1['pscore_forest'] = pscore_forest
+    # REGRESSION TREE
+    rf_modelD = RandomForestClassifier(n_estimators=100, max_depth=6, random_state=42)
+    rf_modelD.fit(Data_Base1[variables1], Data_Base1['Riesgo'])
+    pscore_forestd = rf_modelD.predict(Data_Base1[variables1])
+    Data_Base1['pscore_forestd'] = pscore_forestd
 
-# Estimación
-Test = Data_Base[Data_Base.Ano == 2019]
-Test = Test[~Test.isin([np.nan, np.inf, -np.inf]).any(1)]
+    # RANDOM FOREST
+    rf_model = RandomForestRegressor(n_estimators=100, max_depth=3, random_state=42)
+    rf_model.fit(Data_Base1[variables1], Data_Base1['Riesgo'])
+    pscore_forest = rf_model.predict(Data_Base1[variables1])
+    Data_Base1['pscore_forest'] = pscore_forest
 
-Test['Intercepto'] = 1
-Test['riesgo_forest'] = rf_model.predict(Test[variables1])
-Test['riesgo_forest'] = np.where(Test.riesgo_forest < 0.5, 0, 1)
-Test['riesgo_regression'] = rf_modelD.predict(Test[variables1])
-# Test['riesgo_regression'] = np.where(Test.riesgo_regression < 0.5, 0, 1)
-Test['riesgo_logit'] = logit1_res.predict(Test[variables1])
-Test['riesgo_logit'] = np.where(Test.riesgo_logit < 0.5, 0, 1)
+    # Estimación
+    Test = Data_Base[Data_Base.Ano == 2019]
+    Test = Test[~Test.isin([np.nan, np.inf, -np.inf]).any(1)]
 
-Test['Riesgo_total'] = Test.riesgo_forest+Test.riesgo_logit+Test.riesgo_regression
+    Test['Intercepto'] = 1
+
+    # # VOLVERLA CATEGORICA
+    Test['Riesgo'] = np.where(Test['PUNT_GLOBAL'] < risk, 'Riesgo', 'No Riesgo')
+
+    Test['riesgo_forest'] = rf_model.predict(Test[variables1])
+    Test['riesgo_forest'] = np.where(Test.riesgo_forest < 0.5, 0, 1)
+    Test['riesgo_regression'] = rf_modelD.predict(Test[variables1])
+    # Test['riesgo_regression'] = np.where(Test.riesgo_regression < 0.5, 0, 1)
+    Test['riesgo_logit'] = logit1_res.predict(Test[variables1])
+    Test['riesgo_logit'] = np.where(Test.riesgo_logit < 0.5, 0, 1)
+
+    Test['Riesgo_total'] = Test.riesgo_forest+Test.riesgo_logit+Test.riesgo_regression
+    pass
 
 # Graficos
 if(selection == 'Home page'):
@@ -142,20 +150,6 @@ if(selection == 'Home page'):
 
 
 if(selection == 'Descriptive statistics'):
-    Anno = st.selectbox(
-        label="Año",
-        options= [2014, 2015, 2016, 2017, 2018],
-        index=0,
-    )
-
-    figHist = px.histogram(
-        Data_Base2[Data_Base2.Ano == Anno],
-        x="PUNT_GLOBAL",
-        color="Riesgo",
-        nbins=150
-        )
-    st.plotly_chart(figHist)
-
     # VariablesNum = [
     #     'PUNT_GLOBAL',
     #     'FAMI_TIENEINTERNET',
@@ -197,8 +191,6 @@ if(selection == 'Descriptive statistics'):
     components.iframe(
         "https://public.tableau.com/views/Semana7_15945094881460/PRELIMINARYDESIGN?:showVizHome=no&:embed=true", scrolling=True, width = 700, height=700)
 
-
-
     # st.write(Test)
     # fig = px.scatter(
     #     Test,
@@ -226,10 +218,25 @@ if(selection == 'Descriptive statistics'):
 
 
 if(selection == 'Model'):
+    Anno = st.selectbox(
+        label="Año",
+        options=[2014, 2015, 2016, 2017, 2018],
+        index=0,
+    )
+
+    figHist = px.histogram(
+        Data_Base2[Data_Base2.Ano == Anno],
+        x="PUNT_GLOBAL",
+        color="Riesgo",
+        nbins=150
+    )
+    st.plotly_chart(figHist)
+
     fig = px.box(
         Test,
         x="Riesgo_total",
         y="ConexMilHab",
+        color = "Riesgo"
         # title='Connectivity vs Year', labels={
         # "Ano": "Year",
         # "ConexMilHab": "Connectivity"}
@@ -319,8 +326,8 @@ if(selection == 'Estimation (map)'):
         name = 'SABER PRO - Colombia',
         style_function = nombreestilo,
         tooltip = folium.GeoJsonTooltip(
-            fields = ['MPIO_CNMBR', VariableGraph],
-            aliases = ['Municipio', 'Puntaje'], 
+            fields=['DPTO_CNMBR', 'MPIO_CNMBR', VariableGraph],
+            aliases = ['Departamento', 'Municipio', 'Puntaje'], 
             localize = True
         )
     ).add_to(m_crime)
@@ -339,50 +346,50 @@ if(selection == 'Simulation'):
     st.write(Test[Test['DEPARTAMENTO'] == DepartamentoFilter][['MUNICIPIO', 'DEPARTAMENTO', 'FAMI_TIENEINTERNET', 'FAMI_TIENECOMPUTADOR', 'ESTU_TIENEETNIA', 'COLE_NATURALEZA', 'PUNT_GLOBAL', 'PoblacionTotal', 'ConexMilHab', 'NoAccesosFijos', 'Indice_Rural']])
 
 
-if selection == 'Hoja para pruebas':
-    DEPARTAMENTO_all = sorted(Data_Base.DEPARTAMENTO.unique().astype(str))
-    DEPARTAMENTO = st.sidebar.selectbox(
-        "Select DEPARTAMENTO",
-        ['All'] + DEPARTAMENTO_all
-    )
+# if selection == 'Hoja para pruebas':
+#     DEPARTAMENTO_all = sorted(Data_Base.DEPARTAMENTO.unique().astype(str))
+#     DEPARTAMENTO = st.sidebar.selectbox(
+#         "Select DEPARTAMENTO",
+#         ['All'] + DEPARTAMENTO_all
+#     )
 
-    MUNICIPIO_all = sorted(
-        Data_Base[Data_Base.DEPARTAMENTO == DEPARTAMENTO].MUNICIPIO.unique())
-    MUNICIPIO = st.sidebar.selectbox(
-        "Select MUNICIPIO",
-        ['All'] + MUNICIPIO_all
-    )
-    if MUNICIPIO == 'All':
-        pass
-        if DEPARTAMENTO == 'All':
-            st.write(Data_Base)
-            pass
-        else:
-            st.write(Data_Base[(Data_Base.DEPARTAMENTO == DEPARTAMENTO)])
-        pass
-    else:
-        st.write(Data_Base[
-            (Data_Base.DEPARTAMENTO == DEPARTAMENTO)
-            & (Data_Base.MUNICIPIO == MUNICIPIO)
-        ])
-        pass
-    # COLE_COD_MCPIO_UBICACION_all = Data_Base.COLE_COD_MCPIO_UBICACION.unique()
-    # COLE_COD_MCPIO_UBICACION = st.selectbox(
-    #     "Select COLE_COD_MCPIO_UBICACION",
-    #     COLE_COD_MCPIO_UBICACION_all
-    # )
-    # st.write(Data_Base[(Data_Base.COLE_COD_MCPIO_UBICACION == COLE_COD_MCPIO_UBICACION)])
-    # st.write(Data_Base.columns)
-    # selected = st.selectbox('Select one option:', [
-    #                         '', 'First one', 'Second one'], format_func=lambda x: 'Select an option' if x == '' else x)
-    # if selected:
-    #     st.success('Yay! 🎉')
-    # else:
-    #     st.warning('No option is selected')
-    pass
+#     MUNICIPIO_all = sorted(
+#         Data_Base[Data_Base.DEPARTAMENTO == DEPARTAMENTO].MUNICIPIO.unique())
+#     MUNICIPIO = st.sidebar.selectbox(
+#         "Select MUNICIPIO",
+#         ['All'] + MUNICIPIO_all
+#     )
+#     if MUNICIPIO == 'All':
+#         pass
+#         if DEPARTAMENTO == 'All':
+#             st.write(Data_Base)
+#             pass
+#         else:
+#             st.write(Data_Base[(Data_Base.DEPARTAMENTO == DEPARTAMENTO)])
+#         pass
+#     else:
+#         st.write(Data_Base[
+#             (Data_Base.DEPARTAMENTO == DEPARTAMENTO)
+#             & (Data_Base.MUNICIPIO == MUNICIPIO)
+#         ])
+#         pass
+#     # COLE_COD_MCPIO_UBICACION_all = Data_Base.COLE_COD_MCPIO_UBICACION.unique()
+#     # COLE_COD_MCPIO_UBICACION = st.selectbox(
+#     #     "Select COLE_COD_MCPIO_UBICACION",
+#     #     COLE_COD_MCPIO_UBICACION_all
+#     # )
+#     # st.write(Data_Base[(Data_Base.COLE_COD_MCPIO_UBICACION == COLE_COD_MCPIO_UBICACION)])
+#     # st.write(Data_Base.columns)
+#     # selected = st.selectbox('Select one option:', [
+#     #                         '', 'First one', 'Second one'], format_func=lambda x: 'Select an option' if x == '' else x)
+#     # if selected:
+#     #     st.success('Yay! 🎉')
+#     # else:
+#     #     st.warning('No option is selected')
+#     pass
 
-if selection == 'Pandas Profiling in Streamlit':
-    pr = ProfileReport(Data_Base, explorative=True)
-    st_profile_report(pr)
-    pass
+# if selection == 'Pandas Profiling in Streamlit':
+#     pr = ProfileReport(Data_Base, explorative=True)
+#     st_profile_report(pr)
+#     pass
 
