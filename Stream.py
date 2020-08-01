@@ -191,7 +191,7 @@ if (selection == 'Mapa de la estimación'):
         unsafe_allow_html= True
         )
 
-    file = "ShapeMap/MGN_MPIO_POLITICO.shp"
+    file = "/home/centos/AppDS4A-master/ShapeMap/MGN_MPIO_POLITICO.shp"
     MapaDpto = geopandas.read_file(file, encoding='utf-8')
     MapaDpto['MPIO_CCDGO_C'] = pd.to_numeric(MapaDpto['DPTO_CCDGO'] + MapaDpto['MPIO_CCDGO'])
 
@@ -338,7 +338,7 @@ if (selection == 'Simulación de una intervención'):
         #-------------------------------------------------------------------------------
         # Mapas
         #-------------------------------------------------------------------------------
-        file = "ShapeMap/MGN_MPIO_POLITICO.shp"
+        file = "/home/centos/AppDS4A-master/ShapeMap/MGN_MPIO_POLITICO.shp"
         MapaDpto = geopandas.read_file(file)
         MapaDpto['MPIO_CCDGO_C'] = pd.to_numeric(
             MapaDpto['DPTO_CCDGO'] + MapaDpto['MPIO_CCDGO'])
@@ -462,7 +462,7 @@ if (selection == 'Simulación de una intervención'):
         #-------------------------------------------------------------------------------
         # Mapas
         #-------------------------------------------------------------------------------
-        file = "ShapeMap/MGN_MPIO_POLITICO.shp"
+        file = "/home/centos/AppDS4A-master/ShapeMap/MGN_MPIO_POLITICO.shp"
         MapaDpto = geopandas.read_file(file)
         MapaDpto['MPIO_CCDGO_C'] = pd.to_numeric(
             MapaDpto['DPTO_CCDGO'] + MapaDpto['MPIO_CCDGO'])
@@ -589,7 +589,7 @@ if (selection == 'Simulación de una intervención'):
         #-------------------------------------------------------------------------------
         # Mapas
         #-------------------------------------------------------------------------------
-        file = "ShapeMap/MGN_MPIO_POLITICO.shp"
+        file = "/home/centos/AppDS4A-master/ShapeMap/MGN_MPIO_POLITICO.shp"
         MapaDpto = geopandas.read_file(file)
         MapaDpto['MPIO_CCDGO_C'] = pd.to_numeric(
             MapaDpto['DPTO_CCDGO'] + MapaDpto['MPIO_CCDGO'])
@@ -962,7 +962,7 @@ if (selection == 'Modelo dinámico (Avanzado)'):
             unsafe_allow_html= True
             )
 
-        file = "ShapeMap/MGN_MPIO_POLITICO.shp"
+        file = "/home/centos/AppDS4A-master/ShapeMap/MGN_MPIO_POLITICO.shp"
         MapaDpto = geopandas.read_file(file, encoding='utf-8')
         MapaDpto['MPIO_CCDGO_C'] = pd.to_numeric(MapaDpto['DPTO_CCDGO'] + MapaDpto['MPIO_CCDGO'])
 
@@ -1109,7 +1109,7 @@ if (selection == 'Modelo dinámico (Avanzado)'):
             #-------------------------------------------------------------------------------
             # Mapas
             #-------------------------------------------------------------------------------
-            file = "ShapeMap/MGN_MPIO_POLITICO.shp"
+            file = "/home/centos/AppDS4A-master/ShapeMap/MGN_MPIO_POLITICO.shp"
             MapaDpto = geopandas.read_file(file)
             MapaDpto['MPIO_CCDGO_C'] = pd.to_numeric(
                 MapaDpto['DPTO_CCDGO'] + MapaDpto['MPIO_CCDGO'])
@@ -1233,7 +1233,7 @@ if (selection == 'Modelo dinámico (Avanzado)'):
             #-------------------------------------------------------------------------------
             # Mapas
             #-------------------------------------------------------------------------------
-            file = "ShapeMap/MGN_MPIO_POLITICO.shp"
+            file = "/home/centos/AppDS4A-master/ShapeMap/MGN_MPIO_POLITICO.shp"
             MapaDpto = geopandas.read_file(file)
             MapaDpto['MPIO_CCDGO_C'] = pd.to_numeric(
                 MapaDpto['DPTO_CCDGO'] + MapaDpto['MPIO_CCDGO'])
@@ -1360,7 +1360,7 @@ if (selection == 'Modelo dinámico (Avanzado)'):
             #-------------------------------------------------------------------------------
             # Mapas
             #-------------------------------------------------------------------------------
-            file = "ShapeMap/MGN_MPIO_POLITICO.shp"
+            file = "/home/centos/AppDS4A-master/ShapeMap/MGN_MPIO_POLITICO.shp"
             MapaDpto = geopandas.read_file(file)
             MapaDpto['MPIO_CCDGO_C'] = pd.to_numeric(
                 MapaDpto['DPTO_CCDGO'] + MapaDpto['MPIO_CCDGO'])
