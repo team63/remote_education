@@ -51,7 +51,12 @@ selection = st.sidebar.radio(
         # 'Pandas Profiling in Streamlit'
     ]
     )
-Colores = ['#9BCCEA', '#7BA0BD', '#587C95', '#37546B']
+# Colores = ['#FF4500', '#D75043', '#AF5A86', '#8765C9'] # Azules
+# Colores = ['#FF4500', '#D75043', '#AF5A86', '#8765C9']  # Spider-Man
+# Colores = ['#FFA500', '#D79043', '#AF7A86', '#8765C9'] # Amarillo-Morado
+# Colores = ['#FF4500', '#E65F55', '#CC7AAA', '#B394FF']
+# Colores = ['#B394FF', '#CC7AAA', '#E65F55', '#FF4500']
+
 
 if (selection != 'Introducción') & (selection != 'Estadisticas descriptivas') & (selection != 'Modelo dinámico (Avanzado)'):
     # Crear base de datos
@@ -166,7 +171,7 @@ if (selection == 'Estadisticas descriptivas'):
     )
 
     # st.markdown("""<p style="text-align: justify;"><strong><span style="color: #ff0000;">PENDIENTE LA EXPLICACI&Oacute;N AC&Aacute;</span></strong></p>""",unsafe_allow_html=True)
-    st.markdown("""<p style="text-align: justify;">Ac&aacute; puedes encontrar algunas de las estisticas de la base de datos. Haciendo uso del panel izquierdo puede seleccionar el periodo que deseas analizar.</p>""",unsafe_allow_html=True)
+    st.markdown("""<p style="text-align: justify;">Ac&aacute; puedes encontrar algunas de las estadisticas de las base de datos. Haciendo uso del panel izquierdo puede seleccionar el periodo que deseas analizar.</p>""",unsafe_allow_html=True)
 
     if (subselection == '2014-2019'):
         components.iframe(
@@ -191,7 +196,7 @@ if (selection == 'Mapa de la estimación'):
         unsafe_allow_html= True
         )
 
-    file = "/home/centos/AppDS4A-master/ShapeMap/MGN_MPIO_POLITICO.shp"
+    file = "ShapeMap/MGN_MPIO_POLITICO.shp"
     MapaDpto = geopandas.read_file(file, encoding='utf-8')
     MapaDpto['MPIO_CCDGO_C'] = pd.to_numeric(MapaDpto['DPTO_CCDGO'] + MapaDpto['MPIO_CCDGO'])
 
@@ -338,7 +343,7 @@ if (selection == 'Simulación de una intervención'):
         #-------------------------------------------------------------------------------
         # Mapas
         #-------------------------------------------------------------------------------
-        file = "/home/centos/AppDS4A-master/ShapeMap/MGN_MPIO_POLITICO.shp"
+        file = "ShapeMap/MGN_MPIO_POLITICO.shp"
         MapaDpto = geopandas.read_file(file)
         MapaDpto['MPIO_CCDGO_C'] = pd.to_numeric(
             MapaDpto['DPTO_CCDGO'] + MapaDpto['MPIO_CCDGO'])
@@ -462,7 +467,7 @@ if (selection == 'Simulación de una intervención'):
         #-------------------------------------------------------------------------------
         # Mapas
         #-------------------------------------------------------------------------------
-        file = "/home/centos/AppDS4A-master/ShapeMap/MGN_MPIO_POLITICO.shp"
+        file = "ShapeMap/MGN_MPIO_POLITICO.shp"
         MapaDpto = geopandas.read_file(file)
         MapaDpto['MPIO_CCDGO_C'] = pd.to_numeric(
             MapaDpto['DPTO_CCDGO'] + MapaDpto['MPIO_CCDGO'])
@@ -589,7 +594,7 @@ if (selection == 'Simulación de una intervención'):
         #-------------------------------------------------------------------------------
         # Mapas
         #-------------------------------------------------------------------------------
-        file = "/home/centos/AppDS4A-master/ShapeMap/MGN_MPIO_POLITICO.shp"
+        file = "ShapeMap/MGN_MPIO_POLITICO.shp"
         MapaDpto = geopandas.read_file(file)
         MapaDpto['MPIO_CCDGO_C'] = pd.to_numeric(
             MapaDpto['DPTO_CCDGO'] + MapaDpto['MPIO_CCDGO'])
@@ -962,7 +967,7 @@ if (selection == 'Modelo dinámico (Avanzado)'):
             unsafe_allow_html= True
             )
 
-        file = "/home/centos/AppDS4A-master/ShapeMap/MGN_MPIO_POLITICO.shp"
+        file = "ShapeMap/MGN_MPIO_POLITICO.shp"
         MapaDpto = geopandas.read_file(file, encoding='utf-8')
         MapaDpto['MPIO_CCDGO_C'] = pd.to_numeric(MapaDpto['DPTO_CCDGO'] + MapaDpto['MPIO_CCDGO'])
 
@@ -1109,7 +1114,7 @@ if (selection == 'Modelo dinámico (Avanzado)'):
             #-------------------------------------------------------------------------------
             # Mapas
             #-------------------------------------------------------------------------------
-            file = "/home/centos/AppDS4A-master/ShapeMap/MGN_MPIO_POLITICO.shp"
+            file = "ShapeMap/MGN_MPIO_POLITICO.shp"
             MapaDpto = geopandas.read_file(file)
             MapaDpto['MPIO_CCDGO_C'] = pd.to_numeric(
                 MapaDpto['DPTO_CCDGO'] + MapaDpto['MPIO_CCDGO'])
@@ -1233,7 +1238,7 @@ if (selection == 'Modelo dinámico (Avanzado)'):
             #-------------------------------------------------------------------------------
             # Mapas
             #-------------------------------------------------------------------------------
-            file = "/home/centos/AppDS4A-master/ShapeMap/MGN_MPIO_POLITICO.shp"
+            file = "ShapeMap/MGN_MPIO_POLITICO.shp"
             MapaDpto = geopandas.read_file(file)
             MapaDpto['MPIO_CCDGO_C'] = pd.to_numeric(
                 MapaDpto['DPTO_CCDGO'] + MapaDpto['MPIO_CCDGO'])
@@ -1360,7 +1365,7 @@ if (selection == 'Modelo dinámico (Avanzado)'):
             #-------------------------------------------------------------------------------
             # Mapas
             #-------------------------------------------------------------------------------
-            file = "/home/centos/AppDS4A-master/ShapeMap/MGN_MPIO_POLITICO.shp"
+            file = "ShapeMap/MGN_MPIO_POLITICO.shp"
             MapaDpto = geopandas.read_file(file)
             MapaDpto['MPIO_CCDGO_C'] = pd.to_numeric(
                 MapaDpto['DPTO_CCDGO'] + MapaDpto['MPIO_CCDGO'])
