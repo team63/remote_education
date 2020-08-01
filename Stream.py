@@ -30,25 +30,25 @@ from streamlit_embedcode import github_gist
 import streamlit.components.v1 as components
 
 
+st.title('Educación a distancia en la época de la COVID-19')
 
-st.title('Remote Education in the time of COVID-19')
 
-
-st.sidebar.title("Navigation panel")
+st.sidebar.title("Panel de Navegación")
 selection = st.sidebar.radio(
     "Go to",
     [
-        'Home page',
-        'Descriptive statistics',
-        'Model',
-        'Estimation (map)',
-        'Simulation'
+        'Introducción',
+        'Estadisticas descriptivas',
+        'Modelo',
+        'Mapa de la estimación',
+        'Simulación de una intervención',
+        'Vulneravilidad COVID-19'
         # 'Hoja para pruebas',
         # 'Pandas Profiling in Streamlit'
     ]
     )
 
-if (selection != 'Home page') & (selection != 'Descriptive statistics'):
+if (selection != 'Introducción') & (selection != 'Estadisticas descriptivas'):
     # Crear base de datos
     Data_Base = pd.read_csv(
         "https://raw.githubusercontent.com/IngFrustrado/AppDS4A/master/Data_Base_1419.csv",
@@ -139,8 +139,9 @@ if (selection != 'Home page') & (selection != 'Descriptive statistics'):
     Test['Riesgo_total'] = Test.riesgo_forest+Test.riesgo_logit+Test.riesgo_regression
     pass
 
+Colores = ['#9BCCEA', '#7BA0BD', '#587C95', '#37546B']
 # Graficos
-if(selection == 'Home page'):
+if (selection == 'Introducción'):
     st.image(
         Image.open('img/Front.jpg'),
         # caption='Sunrise by the mountains',
@@ -149,7 +150,7 @@ if(selection == 'Home page'):
     pass
 
 
-if(selection == 'Descriptive statistics'):
+if (selection == 'Estadisticas descriptivas'):
     # VariablesNum = [
     #     'PUNT_GLOBAL',
     #     'FAMI_TIENEINTERNET',
@@ -189,7 +190,7 @@ if(selection == 'Descriptive statistics'):
     # st.video('https://www.youtube.com/watch?v=u6d9Eeg1jok')
 
     components.iframe(
-        "https://public.tableau.com/views/Semana7_15945094881460/PRELIMINARYDESIGN?:showVizHome=no&:embed=true", scrolling=True, width = 700, height=700)
+        "https://public.tableau.com/views/Dashboard_Icfes_v2/Departamento?:showVizHome=no&:embed=true", scrolling=True, width = 1000, height=900)
 
     # st.write(Test)
     # fig = px.scatter(
@@ -217,7 +218,7 @@ if(selection == 'Descriptive statistics'):
     # st.plotly_chart(fig2)
 
 
-if(selection == 'Model'):
+if (selection == 'Modelo'):
     Anno = st.selectbox(
         label="Año",
         options=[2014, 2015, 2016, 2017, 2018],
@@ -265,9 +266,9 @@ if(selection == 'Model'):
 # st.plotly((MapaCol))
 
 # Mapa 2
-if(selection == 'Estimation (map)'):
+if (selection == 'Mapa de la estimación'):
     file = "ShapeMap/MGN_MPIO_POLITICO.shp"
-    MapaDpto = geopandas.read_file(file)
+    MapaDpto = geopandas.read_file(file, encoding='utf-8')
     MapaDpto['MPIO_CCDGO_C'] = pd.to_numeric(MapaDpto['DPTO_CCDGO'] + MapaDpto['MPIO_CCDGO'])
 
     MapaDpto = MapaDpto.join(Test.set_index('COLE_COD_MCPIO_UBICACION'), how = 'left', on = 'MPIO_CCDGO_C')
@@ -295,7 +296,7 @@ if(selection == 'Estimation (map)'):
     min_cn, max_cn = MapaDpto[VariableGraph].quantile([0.01,0.99]).apply(round, 2)
 
     colormap = branca.colormap.LinearColormap(
-        colors = ['#FFFFFF', '#6495ED', '#FFA500', '#FF4500'],
+        colors=Colores,
         index= [0, 1, 2, 3],
         vmin = min_cn,
         vmax = max_cn
@@ -303,8 +304,7 @@ if(selection == 'Estimation (map)'):
 
     tile = st.sidebar.selectbox(
         label="Mapa base",
-        options=["CartoDB dark_matter", "OpenStreetMap", "Stamen Toner", "Stamen Terrain",
-                "Stamen Watercolor", "CartoDB positron"],
+        options=["CartoDB positron", "CartoDB dark_matter", "OpenStreetMap", "Stamen Toner", "Stamen Terrain", "Stamen Watercolor"],
         index=0,
     )
 
@@ -336,7 +336,7 @@ if(selection == 'Estimation (map)'):
 
     folium_static(m_crime)
 
-if(selection == 'Simulation'):
+if (selection == 'Simulación de una intervención'):
     DepartamentoFilter = st.sidebar.selectbox(
         label="Filtro Departamento",
         options=Test['DEPARTAMENTO'].unique(),
@@ -388,8 +388,69 @@ if(selection == 'Simulation'):
 #     #     st.warning('No option is selected')
 #     pass
 
-# if selection == 'Pandas Profiling in Streamlit':
-#     pr = ProfileReport(Data_Base, explorative=True)
-#     st_profile_report(pr)
-#     pass
+if selection == 'Vulneravilidad COVID-19':
+    url = "https://www.datos.gov.co/api/views/gt2j-8ykr/rows.csv?accessType=DOWNLOAD"
+    DataCOVID = pd.read_csv(url)
+
+    filtroNoEstado = ['Recuperado', 'Fallecido']
+    DataCOVID  = DataCOVID[~DataCOVID['Estado'].isin(filtroNoEstado)]
+    COVIDAgrup = DataCOVID.groupby(DataCOVID['Código DIVIPOLA']).count()['ID de caso'].reset_index()
+    COVIDAgrup = COVIDAgrup.rename(columns={"ID de caso": "CasosActivos"})
+
+    CovidTest = Test.merge(COVIDAgrup, how='left' ,left_on='COLE_COD_MCPIO_UBICACION', right_on='Código DIVIPOLA')
+    CovidTest['CasosActivos'] = CovidTest['CasosActivos'].fillna(0)
+    CovidTest=CovidTest.drop(columns=['Ano','PoblacionTotal','NoAccesosFijos','Indice_Rural','Código DIVIPOLA'])
+
+    Poblacion_2020 = pd.read_excel("2020-poblacion.xlsx")#.dropna()
+    covid_19=CovidTest.merge(Poblacion_2020[['Municipio','total','Rural']], how='left' ,left_on='COLE_COD_MCPIO_UBICACION', right_on='Municipio')
+    covid_19['ContagioMilHab'] = 1000 * covid_19['CasosActivos'] / covid_19['total']
+    covid_19['Indice_Rural']=covid_19['Rural']/covid_19['total'].round(2)
+
+    Column = st.selectbox(
+        label="Variable del eje y",
+        options=["ConexMilHab", 'FAMI_TIENEINTERNET', 'FAMI_TIENECOMPUTADOR', 'ESTU_TIENEETNIA',
+                 'COLE_NATURALEZA', 'PUNT_GLOBAL', 'ContagioMilHab', "Indice_Rural"],
+        index=0,
+    )
+    Row = st.selectbox(
+        label="Variable del eje x",
+        options=["Indice_Rural", "ConexMilHab", 'FAMI_TIENEINTERNET', 'FAMI_TIENECOMPUTADOR', 'ESTU_TIENEETNIA', 'COLE_NATURALEZA', 'PUNT_GLOBAL', 'ContagioMilHab'],
+        index=0,
+    )
+    Size = st.selectbox(
+        label="Variable del tamaño",
+        options=["ContagioMilHab", "ConexMilHab", 'FAMI_TIENEINTERNET', 'FAMI_TIENECOMPUTADOR', 'ESTU_TIENEETNIA', 'COLE_NATURALEZA', 'PUNT_GLOBAL', "Indice_Rural"],
+        index=0,
+    )
+
+    if Row in ["ContagioMilHab", "ConexMilHab", 'PUNT_GLOBAL']:
+        BoolX = True
+        pass
+    else:
+        BoolX = False
+        pass
+
+    if Column in ["ContagioMilHab", "ConexMilHab", 'PUNT_GLOBAL']:
+        BoolY = True
+        pass
+    else:
+        BoolY = False
+        pass
+
+    fig = px.scatter(
+        covid_19[covid_19.ContagioMilHab > 1],
+        x=Row,
+        y=Column,
+        hover_name="MUNICIPIO",
+        color="Riesgo_total",
+        color_continuous_scale= Colores,
+        size=Size,
+        log_y=BoolY,
+        log_x=BoolX,
+        )
+    
+    st.plotly_chart(fig.update_traces(mode='markers', marker_line_width=1.5))
+
+    # st.write(covid_19.columns)
+    pass
 
