@@ -337,13 +337,204 @@ if (selection == 'Mapa de la estimación'):
     folium_static(m_crime)
 
 if (selection == 'Simulación de una intervención'):
-    DepartamentoFilter = st.sidebar.selectbox(
-        label="Filtro Departamento",
-        options=Test['DEPARTAMENTO'].unique(),
-        index=0,
-    )
+    opciones = ['Análisis País', 'Análisis Departamento', 'Análisis Municipio'] # una lista desplegable con los análisis
+    analisis = st.sidebar.selectbox('Por favor seleccione un análisis de la lista.', opciones)
+    #opciones = st.sidebar.radio("Seleccione el Analisis", ['Municipio', 'Departamento', 'Pais'])
+    # Anàlisis por Departamento
+    if analisis=='Análisis Departamento':
+        #-------------------------------------------------------------------------------
+        # Entradas de usuario ConexMilHab
+        #-------------------------------------------------------------------------------
+        Departamento_Sel = st.sidebar.selectbox(
+            label="Filtro Departamento",
+            options=Test['DEPARTAMENTO'].unique(),
+            index=0,
+        )
+        ColumnsIn=['FAMI_TIENECOMPUTADOR','COLE_NATURALEZA','ConexMilHab']
+        st.subheader("Análisis Departamento")
+        #-------------------------------------------------------------------------------
+        # Se calcula los valores base con los datos del usuario
+        #-------------------------------------------------------------------------------
+        Vector_Base_Departamento=Test[(Test['DEPARTAMENTO'] == Departamento_Sel) & (Test['Ano'] == max(Test['Ano']))]
+        Risk_Base_Departamento=Vector_Base_Departamento['Riesgo_total'] 
 
-    st.write(Test[Test['DEPARTAMENTO'] == DepartamentoFilter][['MUNICIPIO', 'DEPARTAMENTO', 'FAMI_TIENEINTERNET', 'FAMI_TIENECOMPUTADOR', 'ESTU_TIENEETNIA', 'COLE_NATURALEZA', 'PUNT_GLOBAL', 'PoblacionTotal', 'ConexMilHab', 'NoAccesosFijos', 'Indice_Rural']])
+        InD_FAMI_TIENECOMPUTADOR = st.slider(
+            label="Porcentaje Familias con Computador",
+            min_value=0,
+            max_value=100,
+            value= 0,
+            step=1
+        )
+        InD_COLE_NATURALEZA = st.slider(
+            label="Porcentaje de Colegios Privados",
+            min_value=0,
+            max_value=100,
+            value= 0,
+            step=1
+        )
+        InD_ConexMilHab = st.slider(
+            label="Conexiones de Internet por Mil Habitantes",
+            min_value=0,
+            max_value=1000,
+            value= 0,
+            step=1
+        )    
+       
+        #-------------------------------------------------------------------------------
+        # Se calcula los vectores de predicción base con los datos del usuario
+        #-------------------------------------------------------------------------------
+        Vector_Usuario_Departamento = Vector_Base_Departamento.copy()
+        Vector_Usuario_Departamento['FAMI_TIENECOMPUTADOR']=Vector_Usuario_Departamento['FAMI_TIENECOMPUTADOR']*(1+InD_FAMI_TIENECOMPUTADOR)
+        Vector_Usuario_Departamento['COLE_NATURALEZA']=Vector_Usuario_Departamento['COLE_NATURALEZA']*(1+InD_FAMI_TIENECOMPUTADOR)
+        Vector_Usuario_Departamento['ConexMilHab']=Vector_Usuario_Departamento['ConexMilHab']*(1+InD_FAMI_TIENECOMPUTADOR)
+        #-------------------------------------------------------------------------------
+        # Estimación
+        #-------------------------------------------------------------------------------
+        Estimate = Vector_Usuario_Departamento
+        Estimate = Estimate[~Estimate.isin([np.nan, np.inf, -np.inf]).any(1)]
+
+        Estimate['Intercepto'] = 1
+        Estimate['riesgo_forest'] = rf_model.predict(Estimate[variables1])
+        Estimate['riesgo_forest'] = np.where(Estimate.riesgo_forest < 0.5, 0, 1)
+        Estimate['riesgo_regression'] = rf_modelD.predict(Estimate[variables1])
+        Estimate['riesgo_logit'] = logit1_res.predict(Estimate[variables1])
+        Estimate['riesgo_logit'] = np.where(Estimate.riesgo_logit < 0.5, 0, 1)
+        Estimate['Riesgo_total'] = Estimate.riesgo_forest+Estimate.riesgo_logit+Estimate.riesgo_regression
+        st.write(Estimate)
+        st.dataframe(Estimate['Riesgo_total'])
+        
+    # Anàlisis por Municipio
+    elif analisis=='Análisis Municipio':
+        #-------------------------------------------------------------------------------
+        # Entradas de usuario ConexMilHab
+        #-------------------------------------------------------------------------------
+        Departamento_Sel = st.sidebar.selectbox(
+            label="Filtro Departamento",
+            options=Test['DEPARTAMENTO'].unique(),
+            index=0,
+        )
+        Municipio_Sel = st.sidebar.selectbox(
+            label="Filtro Municipio",
+            options=Test[Test['DEPARTAMENTO']==Departamento_Sel]['MUNICIPIO'].unique(),
+            index=0,
+        )
+        ColumnsIn=['FAMI_TIENECOMPUTADOR','COLE_NATURALEZA','ConexMilHab']
+
+        st.subheader("Análisis Municipio")
+        #-------------------------------------------------------------------------------
+        # Se calcula los valores base con los datos del usuario
+        #-------------------------------------------------------------------------------
+        Vector_Base_Municipio=Test[(Test['MUNICIPIO'] == Municipio_Sel) & (Test['Ano'] == max(Test['Ano']))]
+        Risk_Base_Municipio=Vector_Base_Municipio['Riesgo_total'] 
+
+        In_FAMI_TIENECOMPUTADOR = st.slider(
+            label="Porcentaje Familias con Computador",
+            min_value=0,
+            max_value=100,
+            value= int(Vector_Base_Municipio['FAMI_TIENECOMPUTADOR']*100),
+            step=1
+        )
+        In_COLE_NATURALEZA = st.slider(
+            label="Porcentaje de Colegios Privados",
+            min_value=0,
+            max_value=100,
+            value= int(Vector_Base_Municipio['COLE_NATURALEZA']*100),
+            step=1
+        )
+        In_ConexMilHab = st.slider(
+            label="Conexiones de Internet por Mil Habitantes",
+            min_value=0,
+            max_value=1000,
+            value= int(Vector_Base_Municipio['ConexMilHab']),
+            step=1
+        )       
+        #-------------------------------------------------------------------------------
+        # Se calcula los vectores de predicción base con los datos del usuario
+        #-------------------------------------------------------------------------------
+        Vector_Usuario_Municipio = Vector_Base_Municipio.copy()
+        Vector_Usuario_Municipio[ColumnsIn]=[In_FAMI_TIENECOMPUTADOR/100,In_COLE_NATURALEZA/100,In_ConexMilHab]
+        #-------------------------------------------------------------------------------
+        # Estimación
+        #-------------------------------------------------------------------------------
+        Estimate = Vector_Usuario_Municipio
+        Estimate = Estimate[~Estimate.isin([np.nan, np.inf, -np.inf]).any(1)]
+
+        Estimate['Intercepto'] = 1
+        Estimate['riesgo_forest'] = rf_model.predict(Estimate[variables1])
+        Estimate['riesgo_forest'] = np.where(Estimate.riesgo_forest < 0.5, 0, 1)
+        Estimate['riesgo_regression'] = rf_modelD.predict(Estimate[variables1])
+        Estimate['riesgo_logit'] = logit1_res.predict(Estimate[variables1])
+        Estimate['riesgo_logit'] = np.where(Estimate.riesgo_logit < 0.5, 0, 1)
+        Estimate['Riesgo_total'] = Estimate.riesgo_forest+Estimate.riesgo_logit+Estimate.riesgo_regression
+        #st.write(Estimate)
+        st.dataframe(Estimate['Riesgo_total'])
+        #-----------------------------------------------------------
+        # Funciona con Plotly mapbox
+        #-----------------------------------------------------------
+
+        #df =  MapaDpto
+        #import plotly.express as px
+
+        #DirCol = pd.read_excel("DirecionesCol.xlsx")
+        #DirCol['Magnitude'] = 10
+        #MapaCol = px.scatter_mapbox(DirCol, lat='LATITUD', lon='LONGITUD', #color=Estimate['Riesgo_total'], size=Estimate['Riesgo_total'],
+        #                  color_continuous_scale=px.colors.cmocean.tempo_r, size_max=24, zoom=4,
+        #                  center= {"lat": 4.570868, "lon": -74.2973328},
+        #                  mapbox_style="carto-positron")
+        #st.plotly_chart(MapaCol)
+        #st.write(DirCol)
+
+        #--------------------
+        file = "ShapeMap/MGN_MPIO_POLITICO.shp"
+        MapaDpto = geopandas.read_file(file)
+        MapaDpto['MPIO_CCDGO_C'] = pd.to_numeric(MapaDpto['DPTO_CCDGO'] + MapaDpto['MPIO_CCDGO'])
+        #FiltroMunicipio=Estimate[Estimate['MUNICIPIO']==Municipio_Sel]['COLE_COD_MCPIO_UBICACION'].reset_index().stack()
+        MapaDpto = MapaDpto.join(Estimate.set_index('COLE_COD_MCPIO_UBICACION'), how = 'left', on = 'MPIO_CCDGO_C')
+        MapaDpto.fillna(0, inplace = True)
+        #MapaDpto = MapaDpto[MapaDpto.MPIO_CCDGO_C == FiltroMunicipio[1]]
+        DataFilter = pd.DataFrame(MapaDpto.drop(columns='geometry'))
+        VariableGraph = 'Riesgo_total'
+        colormap = branca.colormap.LinearColormap(
+            colors = ['#FFFFFF', '#6495ED', '#FFA500', '#FF4500'],
+            index= [0, 1, 2, 3],
+            vmin = 0,
+            vmax = 3
+        )
+
+        tile = st.sidebar.selectbox(
+            label="Mapa base",
+            options=["CartoDB dark_matter", "OpenStreetMap", "Stamen Toner", "Stamen Terrain",
+                    "Stamen Watercolor", "CartoDB positron"],
+            index=0,
+        )
+
+        m_crime = folium.Map(
+            location=[4.570868, -74.2973328],
+            zoom_start=5,
+            tiles = tile
+            )
+
+        nombreestilo = lambda x: {
+            'fillColor': colormap(x['properties'][VariableGraph]),
+            'color': 'black',
+            'weight':0,
+            'fillOpacity':0.75
+        }
+
+        stategeo = folium.GeoJson(
+            MapaDpto.to_json(),
+            name = 'Riesgo SABER PRO - Colombia',
+            style_function = nombreestilo,
+            tooltip = folium.GeoJsonTooltip(
+                fields=['DPTO_CNMBR', 'MPIO_CNMBR', VariableGraph],
+                aliases = ['Departamento', 'Municipio', 'Riesgo'], 
+                localize = True
+            )
+        ).add_to(m_crime)
+
+        colormap.add_to(m_crime)
+
+        folium_static(m_crime)
 
 
 # if selection == 'Hoja para pruebas':
