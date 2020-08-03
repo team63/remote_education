@@ -242,8 +242,8 @@ if (selection == 'Vulneravilidad COVID-19'):
 
     FechaMAX = max(pd.to_datetime(DataCOVID['fecha reporte web']).dt.date)
 
-    filtroNoEstado = ['Recuperado', 'Fallecido']
-    DataCOVID = DataCOVID[~DataCOVID['Estado'].isin(filtroNoEstado)]
+    filtroNoEstado = ['Leve', 'Moderado', 'Grave']
+    DataCOVID = DataCOVID[DataCOVID['Estado'].isin(filtroNoEstado)]
     COVIDAgrup = DataCOVID.groupby(DataCOVID['Código DIVIPOLA']).count()[
         'ID de caso'].reset_index()
     COVIDAgrup = COVIDAgrup.rename(columns={"ID de caso": "CasosActivos"})
@@ -887,8 +887,8 @@ if (selection == 'Modelo dinámico (Avanzado)'):
 
         FechaMAX = max(pd.to_datetime(DataCOVID['fecha reporte web']).dt.date)
 
-        filtroNoEstado = ['Recuperado', 'Fallecido']
-        DataCOVID = DataCOVID[~DataCOVID['Estado'].isin(filtroNoEstado)]
+        filtroNoEstado = ['Leve', 'Moderado', 'Grave']
+        DataCOVID = DataCOVID[DataCOVID['Estado'].isin(filtroNoEstado)]
         COVIDAgrup = DataCOVID.groupby(DataCOVID['Código DIVIPOLA']).count()[
             'ID de caso'].reset_index()
         COVIDAgrup = COVIDAgrup.rename(columns={"ID de caso": "CasosActivos"})
