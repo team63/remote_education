@@ -130,7 +130,7 @@ selection = st.sidebar.radio(
 if (selection != 'Introducción') & (selection != 'Estadisticas descriptivas') & (selection != 'Conclusiones') & (selection != 'Modelo') & (selection != 'Modelo dinámico (Avanzado)'):
     # Data Base ----
     Data_Base = pd.read_csv(
-        pRute + pRute + "Data_Base_1419.csv",
+        pRute + "Data_Base_1419.csv",
         encoding='UTF-8'
         )
 
@@ -659,7 +659,7 @@ if (selection == 'Modelo dinámico (Avanzado)'):
 
     # Crear base de datos
     Data_Base = pd.read_csv(
-        pRute + pRute + "Data_Base_1419.csv",
+        pRute + "Data_Base_1419.csv",
         encoding='UTF-8'
         )
 
