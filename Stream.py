@@ -40,6 +40,9 @@ import locale
 locale.setlocale(locale.LC_ALL, 'es_ES.UTF-8')
 from datetime import datetime as dt
 
+# pRute = "/home/centos/AppDS4A-master/"
+pRute  = ''
+
 #-------------------------------------------------------------------------------
 # Colours
 #-------------------------------------------------------------------------------
@@ -100,6 +103,13 @@ VarNameH = {
 #-------------------------------------------------------------------------------
 st.title('Educación a distancia en los tiempos del COVID-19')
 
+st.sidebar.image(
+    Image.open(pRute + 'img/Logo.png'),
+    # caption='Sunrise by the mountains',
+    use_column_width=True,
+    format='PNG'
+)
+
 st.sidebar.title("Panel de Navegación")
 selection = st.sidebar.radio(
     "Ir a",
@@ -120,7 +130,7 @@ selection = st.sidebar.radio(
 if (selection != 'Introducción') & (selection != 'Estadisticas descriptivas') & (selection != 'Conclusiones') & (selection != 'Modelo') & (selection != 'Modelo dinámico (Avanzado)'):
     # Data Base ----
     Data_Base = pd.read_csv(
-        "Data_Base_1419.csv",
+        pRute + pRute + "Data_Base_1419.csv",
         encoding='UTF-8'
         )
 
@@ -209,7 +219,7 @@ if (selection != 'Introducción') & (selection != 'Estadisticas descriptivas') &
 #-------------------------------------------------------------------------------
 if (selection == 'Introducción'):
     st.image(
-        Image.open('img/Front.jpg'),
+        Image.open(pRute + 'img/Front.jpg'),
         # caption='Sunrise by the mountains',
         use_column_width=True
     )
@@ -225,7 +235,7 @@ if (selection == 'Estadisticas descriptivas'):
     st.markdown("""<p style="text-align: justify;">Ac&aacute; se encuentran algunos mapas interactivos con algunas de las variables m&aacute;s interesantes que descubrimos en el proceso de modelamiento. Estas variables son el promedio del puntaje global del examen ICFES, las conexiones por cada mil habitantes y porcentaje de estudiantes que viven en &aacute;reas rurales.</p> <p style="text-align: justify;">Puede seleccionar un grupo de municipios o solo uno de ellos directamente sobre el mapa.</p>""", unsafe_allow_html=True)
 
     components.iframe(
-        "https://public.tableau.com/views/Estadisticas_Descrip_14_al_19/Mapas2?:loadOrderID=1&:display_count=y&:showTabs=y&:showVizHome=no&:embed=true", scrolling=True, width=1000, height=900)
+        "https://public.tableau.com/views/Estadisticas_Descrip_14_al_19/Mapas2?:loadOrderID=1&:display_count=y&:showTabs=y&:showVizHome=no&:embed=true", scrolling=True, width=1024, height=795)
 
     pass
 
@@ -233,7 +243,7 @@ if (selection == 'Modelo'):
     st.markdown("""<p style="text-align: justify;">Ahora bien, la estimaci&oacute;n de la vulnerabilidad de cada uno de los municipios se ha establecido por 3 modelos (<em>logit</em>, <em>random forest</em> y <em>random forest regression</em>), donde cada uno de ellos recoge caracter&iacute;sticas distintas de la informaci&oacute;n reportada por el ICFES, MinTic y DANE.</p> <p style="text-align: justify;">Usted puede refinar los resultados de nuestra estimaci&oacute;n seleccionando municipios de manera individual.</p>""", unsafe_allow_html=True)
 
     components.iframe(
-        "https://public.tableau.com/views/Descrip_Modelo/Departamento?:showVizHome=no&:embed=true", scrolling=True, height=900)
+        "https://public.tableau.com/views/Descrip_Modelo/Departamento?:showVizHome=no&:embed=true", scrolling=True, width=1008, height=827)
     pass
 
 if (selection == 'Vulneravilidad COVID-19'):
@@ -254,7 +264,7 @@ if (selection == 'Vulneravilidad COVID-19'):
     CovidTest = CovidTest.drop(columns=[
                                'Ano', 'PoblacionTotal', 'NoAccesosFijos', 'Indice_Rural', 'Código DIVIPOLA'])
 
-    Poblacion_2020 = pd.read_excel("2020-poblacion.xlsx")  # .dropna()
+    Poblacion_2020 = pd.read_excel(pRute + "2020-poblacion.xlsx")  # .dropna()
     covid_19 = CovidTest.merge(Poblacion_2020[['Municipio', 'total', 'Rural']],
                                how='left', left_on='COLE_COD_MCPIO_UBICACION', right_on='Municipio')
     covid_19['ContagioMilHab'] = 1000 * \
@@ -470,7 +480,7 @@ if (selection == 'Simulación de una intervención'):
         unsafe_allow_html= True
         )
 
-    file = "ShapeMap/MGN_MPIO_POLITICO.shp"
+    file = pRute + "ShapeMap/MGN_MPIO_POLITICO.shp"
     MapaDpto = geopandas.read_file(file, encoding='utf-8')
     MapaDpto['MPIO_CCDGO_C'] = pd.to_numeric(MapaDpto['DPTO_CCDGO'] + MapaDpto['MPIO_CCDGO'])
 
@@ -498,29 +508,29 @@ if (selection == 'Simulación de una intervención'):
     #-------------------------------------------------------------------------------
     InD_FAMI_TIENECOMPUTADOR = st.slider(
         label="Incremento en % de familias con computador",
-        min_value=0,
-        max_value=100,
-        value=0,
-        step=1
+        min_value=0.0,
+        max_value=1.0,
+        value=0.0,
+        step=0.01
     )
-    InD_FAMI_TIENEINTERNET = st.slider(
-        label="Incremento en % de familias con internet",
-        min_value=0,
-        max_value=100,
-        value=0,
-        step=1
-    )
+    # InD_FAMI_TIENEINTERNET = st.slider(
+    #     label="Incremento en % de familias con internet",
+    #     min_value=0.0,
+    #     max_value=1.0,
+    #     value=0.0,
+    #     step=0.01
+    # )
     InD_COLE_NATURALEZA = st.slider(
         label="Incremento en % de colegios privados",
-        min_value=0,
-        max_value=100,
-        value=0,
-        step=1
+        min_value=0.0,
+        max_value=1.0,
+        value=0.0,
+        step=0.01
     )
     InD_ConexMilHab = st.slider(
         label="Incremento de las conexiones de Internet por cada mil habitantes",
         min_value=0,
-        max_value=1000,
+        max_value=500,
         value=0,
         step=1
     )
@@ -529,7 +539,7 @@ if (selection == 'Simulación de una intervención'):
     #-------------------------------------------------------------------------------
     Vector_Usuario_Pais = Vector_Base_Pais.copy()
     Vector_Usuario_Pais['FAMI_TIENECOMPUTADOR'] = np.where(Vector_Base_Pais['FAMI_TIENECOMPUTADOR'] + InD_FAMI_TIENECOMPUTADOR > 1, 1, Vector_Base_Pais['FAMI_TIENECOMPUTADOR'] + InD_FAMI_TIENECOMPUTADOR)
-    Vector_Usuario_Pais['FAMI_TIENEINTERNET'] = np.where(Vector_Base_Pais['FAMI_TIENEINTERNET'] + InD_FAMI_TIENEINTERNET > 1, 1, Vector_Base_Pais['FAMI_TIENEINTERNET'] + InD_FAMI_TIENEINTERNET)
+    # Vector_Usuario_Pais['FAMI_TIENEINTERNET'] = np.where(Vector_Base_Pais['FAMI_TIENEINTERNET'] + InD_FAMI_TIENEINTERNET > 1, 1, Vector_Base_Pais['FAMI_TIENEINTERNET'] + InD_FAMI_TIENEINTERNET)
     Vector_Usuario_Pais['COLE_NATURALEZA'] = np.where(Vector_Base_Pais['COLE_NATURALEZA'] + InD_COLE_NATURALEZA > 1, 1, Vector_Base_Pais['COLE_NATURALEZA'] + InD_COLE_NATURALEZA)
     Vector_Usuario_Pais['ConexMilHab'] = np.where(Vector_Base_Pais['ConexMilHab'] + InD_ConexMilHab > 1000, 1000, Vector_Base_Pais['ConexMilHab'] + InD_ConexMilHab)
     #-------------------------------------------------------------------------------
@@ -567,7 +577,7 @@ if (selection == 'Simulación de una intervención'):
     if (DPTO_CNMBR == 'Todos') or (MPIO_CNMBR == 'Todos'):
         Riesgo_all = sorted(MapaDpto.Riesgo_total.unique())
         RiesgoSelect = st.sidebar.selectbox(
-            "Seleccione un nivel de Riesgo",
+            "Seleccione un nivel de vulnerabilidad",
             ['Todos'] + Riesgo_all
         )
         if RiesgoSelect != 'Todos':
@@ -649,7 +659,7 @@ if (selection == 'Modelo dinámico (Avanzado)'):
 
     # Crear base de datos
     Data_Base = pd.read_csv(
-        "Data_Base_1419.csv",
+        pRute + pRute + "Data_Base_1419.csv",
         encoding='UTF-8'
         )
 
@@ -766,6 +776,10 @@ if (selection == 'Modelo dinámico (Avanzado)'):
             hover_data=['PUNT_GLOBAL', 'MUNICIPIO', 'DEPARTAMENTO'],
             nbins=150
         )
+
+        figHist['layout']['yaxis']['title']['text'] = "Cuenta"
+        figHist['layout']['xaxis']['title']['text'] = "Promedio del puntaje ICFES"
+
         st.plotly_chart(figHist)
 
         # st.write(Data_Base2.columns)
@@ -773,28 +787,27 @@ if (selection == 'Modelo dinámico (Avanzado)'):
         st.header('Analisis de resultados')
 
         st.markdown(
-            """<p style="text-align: justify;">Nuestros tres modelos han sido entrenados con informaci&oacute;n de los a&ntilde;os 2014 y 2018, a continuaci&oacute;n puede encontrar los resultados de las estimaciones para el a&ntilde;o 2019, como notara en muchas ocasiones existen municipios que nuestros modelos han determinado con nivel de riesgo&nbsp;muy alto (3) intermedio-alto (2) e intermedio-bajo (1) a&uacute;n cuando en el a&ntilde;o 2019 tuvieron resultados superiores al umbral seleccionado (No Riesgo). Consideramos que estos municipios tienen caracteristicas que los hacen muy vulnerables. A continuaci&oacute;n puede comparar los municipios seg&uacute;n su nivel de riesgo por la variable que usted desee observar.</p>""",
+            """<p style="text-align: justify;">Los modelos calculados (logit, random forest y random forest regression) han sido entrenados con informaci&oacute;n del ICFES de los periodos del 2014 al 2018 para determinar si un municipio est&aacute; en riesgo. Usando estos modelos estimamos el riesgo de cada municipio con la informaci&oacute;n del a&ntilde;o 2019. Cada modelo nos arroja como resultado 1 o 0 si se estima que puede caer en riesgo o no respectivamente. Sumando los resultados de los modelos, obtenemos el puntaje de vulnerabilidad para cada uno de los municipios. Recuerde que el puntaje l&iacute;mite con el que se determina si un municipio esta en riesgo o no es el que usted ha escogido en el panel izquierdo.</p> <p style="text-align: justify;">Sumando los resultados de los modelos, se han determinado niveles de vulnerabilidad: muy alta (3), intermedio-alta (2), intermedio-baja (1) y baja (0). A continuaci&oacute;n cuenta con un gr&aacute;fico de caja, donde puede seleccionar la variable que desea comparar discriminado por vulnerabilidad y riesgo (recuerde que un municipio se considera en riesgo si puntaje promedio es inferior al umbral seleccionado).</p>""",
             unsafe_allow_html=True
         )
 
         varY = st.selectbox(
             label="Variable del eje y",
             options=[
-                "ConexMilHab",
-                'FAMI_TIENEINTERNET',
-                'FAMI_TIENECOMPUTADOR',
-                'ESTU_TIENEETNIA',
-                'COLE_NATURALEZA',
-                'PUNT_GLOBAL',
-                'ContagioMilHab',
-                "Indice_Rural"
+                'Conexiones x1000 habitantes',
+                'Promedio del puntaje ICFES',
+                '% de familias con internet',
+                '% de familias con computador',
+                '% de estudiantes que pertenecen a una etnia',
+                '% de familias que viven en un área rural',
+                '% de Colegios Privados',
             ])
 
         fig = px.box(
             Test,
             x="Riesgo_total",
-            y=varY,
-            labels={'x': VarNameH["Riesgo_total"], 'y': VarNameH[varY]},
+            y=NameVARH[varY],
+            labels={'x': "Vulnerabilidad", 'y': varY},
             color="Riesgo",
             color_discrete_sequence=[Colores[1], Colores[3]]
             # title='Connectivity vs Year', labels={
@@ -802,16 +815,19 @@ if (selection == 'Modelo dinámico (Avanzado)'):
             # "ConexMilHab": "Connectivity"}
         )
 
+        fig['layout']['yaxis']['title']['text'] = varY
+        fig['layout']['xaxis']['title']['text'] = "Vulnerabilidad"
+
         st.plotly_chart(fig)
         pass
 
     if (subselection == 'Mapa de la estimación'):
         st.markdown(
-            """<p style="text-align: justify;">Ahora que ya se ha seleccionado un Umbral (el cual puede seguir modificando en el panel izquierda), puede ver los resultados goereferenciados. Puede filtrar los resultados con los controlos que encontrara en el panel izquierdo.</p>""",
+            """<p style="text-align: justify;">Ahora que ya se ha seleccionado un puntaje promedio limite para determinar los municipios en riesgo (el cual puede seguir modificando en el panel izquierdo), puede ver los resultados del nivel de vulnerabilidad georreferenciados, el rojo representa los municipios con nivel de vulnerabilidad muy alto (3),&nbsp;el naranja oscuro intermedio-alta (2), el naranja claro intermedio-baja (1) y el amarillo baja (0).</p> <p style="text-align: justify;">Recuerde que puede filtrar los resultados con los controles que encontrara en el panel izquierdo.</p>""",
             unsafe_allow_html= True
             )
 
-        file = "ShapeMap/MGN_MPIO_POLITICO.shp"
+        file = pRute + "ShapeMap/MGN_MPIO_POLITICO.shp"
         MapaDpto = geopandas.read_file(file, encoding='utf-8')
         MapaDpto['MPIO_CCDGO_C'] = pd.to_numeric(MapaDpto['DPTO_CCDGO'] + MapaDpto['MPIO_CCDGO'])
 
@@ -820,7 +836,7 @@ if (selection == 'Modelo dinámico (Avanzado)'):
 
         Riesgo_all = sorted(MapaDpto.Riesgo_total.unique())
         RiesgoSelect = st.sidebar.selectbox(
-            "Seleccione un nivel de Riesgo",
+            "Seleccione un nivel de vulnerabilidad",
             ['Todos'] + Riesgo_all
         )
         if RiesgoSelect != 'Todos':
@@ -899,7 +915,7 @@ if (selection == 'Modelo dinámico (Avanzado)'):
         CovidTest = CovidTest.drop(columns=[
                                 'Ano', 'PoblacionTotal', 'NoAccesosFijos', 'Indice_Rural', 'Código DIVIPOLA'])
 
-        Poblacion_2020 = pd.read_excel("2020-poblacion.xlsx")  # .dropna()
+        Poblacion_2020 = pd.read_excel(pRute + "2020-poblacion.xlsx")  # .dropna()
         covid_19 = CovidTest.merge(Poblacion_2020[['Municipio', 'total', 'Rural']],
                                 how='left', left_on='COLE_COD_MCPIO_UBICACION', right_on='Municipio')
         covid_19['ContagioMilHab'] = 1000 * \
@@ -1115,7 +1131,7 @@ if (selection == 'Modelo dinámico (Avanzado)'):
             unsafe_allow_html=True
         )
 
-        file = "ShapeMap/MGN_MPIO_POLITICO.shp"
+        file = pRute + "ShapeMap/MGN_MPIO_POLITICO.shp"
         MapaDpto = geopandas.read_file(file, encoding='utf-8')
         MapaDpto['MPIO_CCDGO_C'] = pd.to_numeric(MapaDpto['DPTO_CCDGO'] + MapaDpto['MPIO_CCDGO'])
 
@@ -1143,29 +1159,29 @@ if (selection == 'Modelo dinámico (Avanzado)'):
         #-------------------------------------------------------------------------------
         InD_FAMI_TIENECOMPUTADOR = st.slider(
             label="Incremento en % de familias con computador",
-            min_value=0,
-            max_value=100,
-            value=0,
-            step=1
+            min_value=0.0,
+            max_value=1.0,
+            value=0.0,
+            step=0.01
         )
-        InD_FAMI_TIENEINTERNET = st.slider(
-            label="Incremento en % de familias con internet",
-            min_value=0,
-            max_value=100,
-            value=0,
-            step=1
-        )
+        # InD_FAMI_TIENEINTERNET = st.slider(
+        #     label="Incremento en % de familias con internet",
+        #     min_value=0.0,
+        #     max_value=1.0,
+        #     value=0.0,
+        #     step=0.01
+        # )
         InD_COLE_NATURALEZA = st.slider(
             label="Incremento en % de colegios privados",
-            min_value=0,
-            max_value=100,
-            value=0,
-            step=1
+            min_value=0.0,
+            max_value=1.0,
+            value=0.0,
+            step=0.01
         )
         InD_ConexMilHab = st.slider(
             label="Incremento de las conexiones de Internet por cada mil habitantes",
             min_value=0,
-            max_value=1000,
+            max_value=500,
             value=0,
             step=1
         )
@@ -1174,7 +1190,7 @@ if (selection == 'Modelo dinámico (Avanzado)'):
         #-------------------------------------------------------------------------------
         Vector_Usuario_Pais = Vector_Base_Pais.copy()
         Vector_Usuario_Pais['FAMI_TIENECOMPUTADOR'] = np.where(Vector_Base_Pais['FAMI_TIENECOMPUTADOR'] + InD_FAMI_TIENECOMPUTADOR > 1, 1, Vector_Base_Pais['FAMI_TIENECOMPUTADOR'] + InD_FAMI_TIENECOMPUTADOR)
-        Vector_Usuario_Pais['FAMI_TIENEINTERNET'] = np.where(Vector_Base_Pais['FAMI_TIENEINTERNET'] + InD_FAMI_TIENEINTERNET > 1, 1, Vector_Base_Pais['FAMI_TIENEINTERNET'] + InD_FAMI_TIENEINTERNET)
+        # Vector_Usuario_Pais['FAMI_TIENEINTERNET'] = np.where(Vector_Base_Pais['FAMI_TIENEINTERNET'] + InD_FAMI_TIENEINTERNET > 1, 1, Vector_Base_Pais['FAMI_TIENEINTERNET'] + InD_FAMI_TIENEINTERNET)
         Vector_Usuario_Pais['COLE_NATURALEZA'] = np.where(Vector_Base_Pais['COLE_NATURALEZA'] + InD_COLE_NATURALEZA > 1, 1, Vector_Base_Pais['COLE_NATURALEZA'] + InD_COLE_NATURALEZA)
         Vector_Usuario_Pais['ConexMilHab'] = np.where(Vector_Base_Pais['ConexMilHab'] + InD_ConexMilHab > 1000, 1000, Vector_Base_Pais['ConexMilHab'] + InD_ConexMilHab)
         #-------------------------------------------------------------------------------
@@ -1212,7 +1228,7 @@ if (selection == 'Modelo dinámico (Avanzado)'):
         if (DPTO_CNMBR == 'Todos') or (MPIO_CNMBR == 'Todos'):
             Riesgo_all = sorted(MapaDpto.Riesgo_total.unique())
             RiesgoSelect = st.sidebar.selectbox(
-                "Seleccione un nivel de Riesgo",
+                "Seleccione un nivel de vulnerabilidad",
                 ['Todos'] + Riesgo_all
             )
             if RiesgoSelect != 'Todos':
