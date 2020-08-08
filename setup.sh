@@ -1,3 +1,7 @@
+export LC_ALL="es_ES.UTF-8"
+export LC_CTYPE="es_ES.UTF-8"
+sudo dpkg-reconfigure locales
+
 mkdir -p ~/.streamlit/
 
 echo "\
