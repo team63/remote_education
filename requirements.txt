@@ -2,6 +2,7 @@ streamlit==0.64.0
 streamlit-folium==0.0.1
 streamlit-embedcode==0.1.0
 streamlit-pandas-profiling==0.0.4
+scikit-surprise==1.1.1
 scipy==1.4.1
 geopandas==0.7.0
 pandas==1.0.4
