@@ -36,8 +36,8 @@ from streamlit_embedcode import github_gist
 import streamlit.components.v1 as components
 
 # Fechas Español
-import locale
-locale.setlocale(locale.LC_ALL, 'es_ES.UTF-8')
+# import locale
+# locale.setlocale(locale.LC_ALL, 'es_ES.UTF-8')
 from datetime import datetime as dt
 
 # pRute = "/home/centos/AppDS4A-master/"
