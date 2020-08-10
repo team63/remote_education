@@ -11,3 +11,7 @@ pip install streamlit sklearn matplotlib plotly branca geopandas folium streamli
 # Run demo app
 streamlit run https://raw.githubusercontent.com/IngFrustrado/AppDS4A/master/Stream.py
 ```
+
+You can check the final product here: [HerokuApp](https://education-covid19.herokuapp.com)
+
+There may be occasions when the server is suspended. In those cases I suggest you run it on your local machine by downloading the repository.
